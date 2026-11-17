@@ -1,5 +1,5 @@
 // 跨页面共享状态：登录态、用户信息、字号档位
-// TODO(底座)：按需补充字段与 action，保持轻量，不引入 pinia
+// 轻量 reactive，不引入 pinia
 import { reactive } from 'vue'
 
 const state = reactive({
@@ -8,11 +8,19 @@ const state = reactive({
   fontSize: localStorage.getItem('fontSize') || 'medium'
 })
 
-// 登录成功后调用：保存 token 与用户信息
+// 把字号档位挂到页面根元素，触发 variables.css 的 data-font 变量切换
+export function applyFontSize(size) {
+  document.documentElement.dataset.font = size
+}
+
+// 登录成功后调用：保存 token 与用户信息，并同步字号档位
 export function setLogin({ token, userInfo }) {
   state.token = token
   state.userInfo = userInfo
   localStorage.setItem('token', token)
+  if (userInfo && userInfo.fontSize) {
+    setFontSize(userInfo.fontSize)
+  }
 }
 
 // 退出登录：清空本地登录态（401 时也调用此方法）
@@ -25,6 +33,10 @@ export function clearLogin() {
 export function setFontSize(size) {
   state.fontSize = size
   localStorage.setItem('fontSize', size)
+  applyFontSize(size)
 }
+
+// 应用启动时调用：恢复上次选择的字号
+applyFontSize(state.fontSize)
 
 export default state
