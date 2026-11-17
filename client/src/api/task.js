@@ -1,4 +1,12 @@
 // 训练项目接口（负责人：B）
-// TODO(B)：实现 getTasks() → GET /tasks
-// TODO(B)：实现 getTaskDetail(id) → GET /tasks/:id
 import request from './request'
+
+// 启用中的训练项目列表
+export function getTasks() {
+  return request.get('/tasks')
+}
+
+// 单个项目图文详情
+export function getTaskDetail(id) {
+  return request.get(`/tasks/${id}`)
+}

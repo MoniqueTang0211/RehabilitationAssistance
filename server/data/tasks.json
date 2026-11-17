@@ -1,1 +1,62 @@
-[]
+[
+  {
+    "id": "task-001",
+    "title": "踝泵运动",
+    "description": "坐在床边或椅子上，双腿自然下垂。先用力将脚尖向上勾起，保持5秒，再用力向下压，保持5秒。像水泵一样反复活动踝关节，每组20次，动作要缓慢到位，感觉小腿肌肉有轻微酸胀即可。",
+    "imageUrl": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=senior%20citizen%20ankle%20pump%20rehabilitation%20exercise%2C%20elderly%20sitting%20on%20chair%20moving%20ankle%2C%20warm%20home%20light%2C%20flat%20illustration%20style%2C%20health%20education%20poster&image_size=landscape_4_3",
+    "duration": 10,
+    "stage": "early",
+    "sortOrder": 1,
+    "isActive": true
+  },
+  {
+    "id": "task-002",
+    "title": "深呼吸练习",
+    "description": "端坐在椅子上，腰背挺直，双手轻轻放在腹部。用鼻子慢慢吸气4秒，感觉腹部鼓起，再用嘴巴缓缓呼气6秒，感觉腹部收回。重复10次为一组，做2组。呼吸过程中保持肩膀放松，不要耸肩。",
+    "imageUrl": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=elderly%20deep%20breathing%20exercise%2C%20senior%20sitting%20upright%20hands%20on%20abdomen%2C%20calm%20bedroom%2C%20flat%20illustration%20style%2C%20health%20education%20poster&image_size=landscape_4_3",
+    "duration": 5,
+    "stage": "early",
+    "sortOrder": 2,
+    "isActive": true
+  },
+  {
+    "id": "task-003",
+    "title": "靠墙静蹲",
+    "description": "背部贴紧墙面，双脚与肩同宽，向前迈出一小步。慢慢沿墙壁下滑，直到大腿与地面约成45度即可，膝盖不要超过脚尖。保持10到20秒，再慢慢站起来。每次做5组，中间休息30秒。如感觉膝盖疼痛请立即停止。",
+    "imageUrl": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=senior%20wall%20squat%20exercise%2C%20elderly%20back%20against%20wall%20knees%20bent%2C%20bright%20hallway%2C%20flat%20illustration%20style%2C%20health%20education%20poster&image_size=landscape_4_3",
+    "duration": 10,
+    "stage": "middle",
+    "sortOrder": 3,
+    "isActive": true
+  },
+  {
+    "id": "task-004",
+    "title": "弹力带上肢训练",
+    "description": "坐在稳固的椅子上，将弹力带中部踩在脚下，双手握住两端。先向两侧平举拉开至肩膀高度，保持3秒后慢慢放回，重复12次。再将双手向上拉伸过头顶，重复12次。动作缓慢，配合呼吸，不要憋气。",
+    "imageUrl": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=elderly%20resistance%20band%20arm%20training%2C%20senior%20pulling%20elastic%20band%20while%20seated%2C%20living%20room%2C%20flat%20illustration%20style%2C%20health%20education%20poster&image_size=landscape_4_3",
+    "duration": 15,
+    "stage": "middle",
+    "sortOrder": 4,
+    "isActive": true
+  },
+  {
+    "id": "task-005",
+    "title": "平衡站立训练",
+    "description": "站在稳固椅子旁边，一只手轻扶椅背。先双脚并拢站立保持平衡30秒，再尝试缓慢抬起一只脚离地5厘米，单脚站立10到20秒，然后换另一只脚。全程附近要有人陪同，如感觉晃动请立即扶好椅子。",
+    "imageUrl": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=elderly%20balance%20training%2C%20senior%20standing%20on%20one%20leg%20holding%20chair%20for%20support%2C%20bright%20living%20room%2C%20flat%20illustration%2C%20health%20education%20poster&image_size=landscape_4_3",
+    "duration": 10,
+    "stage": "middle",
+    "sortOrder": 5,
+    "isActive": true
+  },
+  {
+    "id": "task-006",
+    "title": "步行耐力训练",
+    "description": "在小区花园或公园平缓路段进行步行锻炼。以正常稍慢的速度步行，挺胸抬头，手臂自然摆动。连续步行15到20分钟，中途可以休息1到2次。穿防滑软底鞋，天气不好时改为室内原地踏步。",
+    "imageUrl": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=senior%20walking%20exercise%2C%20elderly%20walking%20in%20park%20with%20cane%2C%20sunny%20day%2C%20flat%20illustration%20style%2C%20health%20education%20poster&image_size=landscape_4_3",
+    "duration": 20,
+    "stage": "late",
+    "sortOrder": 6,
+    "isActive": true
+  }
+]

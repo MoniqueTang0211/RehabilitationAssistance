@@ -6,5 +6,7 @@ module.exports = {
   jwtSecret: process.env.JWT_SECRET || 'elder-rehab-dev-secret',
   jwtExpire: process.env.JWT_EXPIRE || '7d',
   dataDir: process.env.DATA_DIR || './data',
-  corsOrigin: process.env.CORS_ORIGIN || '*'
+  corsOrigin: process.env.CORS_ORIGIN || '*',
+  // TODO(M4联调): 鉴权上线后删除，devUserId 仅用于开发期无 token 联调
+  devUserId: process.env.DEV_USER_ID || 'dev-user-001'
 }
