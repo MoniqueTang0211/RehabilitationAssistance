@@ -1,0 +1,28 @@
+# 依赖
+node_modules/
+
+# 环境变量（只入库 .env.example）
+.env
+.env.local
+.env.*.local
+
+# 运行期产生的数据回写（初始数据入库，回写内容不入库）
+# 若团队约定初始数据入库，请提交前将 data/*.json 恢复为初始内容
+server/data/*.runtime.json
+
+# 日志
+logs/
+*.log
+npm-debug.log*
+
+# 编辑器与系统文件
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+
+# 构建产物
+dist/
+dist-ssr/
+coverage/

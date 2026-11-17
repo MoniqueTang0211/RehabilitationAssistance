@@ -1,0 +1,36 @@
+/* 适老化全局变量（A / 底座负责人一次定稿，其他人只消费变量，不新增变量） */
+
+/* 字号三档：页面根元素按 store.fontSize 挂 data-font="small|medium|large" 生效 */
+:root,
+[data-font='medium'] {
+  --font-base: 18px;
+  --font-lg: 22px;
+  --font-xl: 28px;
+}
+
+[data-font='small'] {
+  --font-base: 16px;
+  --font-lg: 20px;
+  --font-xl: 24px;
+}
+
+[data-font='large'] {
+  --font-base: 20px;
+  --font-lg: 26px;
+  --font-xl: 34px;
+}
+
+/* 配色与间距 */
+:root {
+  --color-primary: #2e7d32;   /* 主色：沉稳绿，适老亲和 */
+  --color-primary-light: #e8f5e9;
+  --color-warning: #ef6c00;
+  --color-danger: #c62828;
+  --color-text: #212121;
+  --color-text-secondary: #616161;
+  --color-bg: #f5f6f7;
+  --color-card: #ffffff;
+  --radius: 12px;
+  --gap: 16px;
+  --btn-height: 56px;         /* 适老化大按钮高度 */
+}
