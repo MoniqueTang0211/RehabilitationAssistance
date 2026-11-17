@@ -1,5 +1,4 @@
-// progress.json 数据访问（负责人：A）
-// 打卡重算与进度读取共用此文件
+// progress.json 数据访问（读写共用：进度读取归 A，打卡重算写入归 B）
 const { readJson, writeJson } = require('../utils/jsonFile')
 
 const FILE = 'progress.json'
