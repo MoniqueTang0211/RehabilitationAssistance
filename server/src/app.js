@@ -4,6 +4,7 @@ const cors = require('cors')
 const config = require('./config')
 const logMiddleware = require('./middlewares/log.middleware')
 const errorMiddleware = require('./middlewares/error.middleware')
+const authMiddleware = require('./middlewares/auth.middleware')
 
 const app = express()
 
@@ -16,8 +17,13 @@ app.get('/api/health', (req, res) => {
   res.json({ code: 0, message: 'ok', data: { status: 'up' } })
 })
 
-// 业务路由：/api/{resource}，各模块负责人在对应 route 文件内实现
+// 登录接口（无需登录）
 app.use('/api/auth', require('./routes/auth.route'))
+
+// ===== 以下接口全部需要登录 =====
+app.use(authMiddleware)
+
+// 业务路由：/api/{resource}，各模块负责人在对应 route 文件内实现
 app.use('/api/user', require('./routes/user.route'))
 app.use('/api/progress', require('./routes/progress.route'))
 app.use('/api/tasks', require('./routes/task.route'))
