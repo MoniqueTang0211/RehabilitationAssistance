@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "id": "9563542a-4632-4ff6-8354-abf3e07bb53b",
+    "userId": "user-001",
+    "taskId": "task-001",
+    "date": "2026-11-17",
+    "status": "done",
+    "checkedAt": "2026-11-17T06:39:06.142Z"
+  },
+  {
+    "id": "0f48151a-75da-4758-a32c-6b3b584caf8c",
+    "userId": "user-001",
+    "taskId": "task-002",
+    "date": "2026-11-17",
+    "status": "done",
+    "checkedAt": "2026-11-17T06:47:35.617Z"
+  }
+]

@@ -5,7 +5,7 @@
     "passwordHash": "$2a$10$ALOakFhdsYfPb3fdZt37NeSg3LY71LwRnntxxCaAoUTfHLCG2WiF.",
     "name": "张爷爷",
     "age": 70,
-    "fontSize": "medium",
+    "fontSize": "large",
     "createdAt": "2026-11-17T00:00:00.000Z"
   }
 ]
