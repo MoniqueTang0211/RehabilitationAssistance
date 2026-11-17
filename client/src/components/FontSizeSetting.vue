@@ -1,93 +1,82 @@
 <script setup>
 // 字体设置组件（负责人：C）：小/中/大三档切换，选中态高亮
-// props：modelValue 当前档位；emit('update:modelValue', size) 供父组件保存
-import { computed } from 'vue'
-
-const props = defineProps({
-  modelValue: { type: String, default: 'medium' }
+// props：fontSize 当前档位、disabled 保存中禁用；emit('change', size) 供父组件保存
+defineProps({
+  fontSize: {
+    type: String,
+    default: 'medium'
+  },
+  disabled: {
+    type: Boolean,
+    default: false
+  }
 })
-const emit = defineEmits(['update:modelValue'])
+
+const emit = defineEmits(['change'])
 
 const options = [
-  { value: 'small', label: '小', sample: 'A' },
-  { value: 'medium', label: '中（推荐）', sample: 'A' },
-  { value: 'large', label: '大', sample: 'A' }
+  { value: 'small', label: '小字' },
+  { value: 'medium', label: '标准字' },
+  { value: 'large', label: '大字' }
 ]
-
-const current = computed(() => props.modelValue)
-
-function pick(value) {
-  if (value !== current.value) {
-    emit('update:modelValue', value)
-  }
-}
 </script>
 
 <template>
-  <div class="font-setting">
-    <div class="font-title">字体大小</div>
+  <section class="card font-size-setting" aria-labelledby="font-size-title">
+    <h2 id="font-size-title" class="setting-title">字体大小</h2>
     <div class="font-options">
       <button
-        v-for="opt in options"
-        :key="opt.value"
+        v-for="option in options"
+        :key="option.value"
         class="font-option"
-        :class="{ active: opt.value === current, ['size-' + opt.value]: true }"
-        @click="pick(opt.value)"
+        :class="{ selected: fontSize === option.value }"
+        type="button"
+        :aria-pressed="fontSize === option.value"
+        :disabled="disabled"
+        @click="emit('change', option.value)"
       >
-        <span class="sample" :class="'sample-' + opt.value">{{ opt.sample }}</span>
-        <span>{{ opt.label }}</span>
+        {{ option.label }}
       </button>
     </div>
-  </div>
+  </section>
 </template>
 
 <style scoped>
-.font-title {
+.setting-title {
+  margin-bottom: 12px;
   font-size: var(--font-lg);
-  font-weight: 700;
-  margin-bottom: 16px;
 }
 
 .font-options {
-  display: flex;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .font-option {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 16px 8px;
-  border: 2px solid #ddd;
+  min-height: var(--btn-height);
+  padding: 8px;
+  border: 2px solid #bdbdbd;
   border-radius: var(--radius);
-  background: #fff;
-  font-size: var(--font-base);
+  background: var(--color-card);
   color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
 }
 
-.font-option.active {
+.font-option.selected {
   border-color: var(--color-primary);
   background: var(--color-primary-light);
-  color: var(--color-primary);
   font-weight: 700;
 }
 
-.sample {
-  line-height: 1;
-  font-weight: 700;
+.font-option:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
-.sample-small {
-  font-size: 20px;
-}
-
-.sample-medium {
-  font-size: 28px;
-}
-
-.sample-large {
-  font-size: 38px;
+.font-option:disabled {
+  cursor: wait;
+  opacity: 0.6;
 }
 </style>

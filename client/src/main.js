@@ -5,4 +5,6 @@ import store from './store'
 import './styles/variables.css'
 import './styles/global.css'
 
+document.documentElement.dataset.font = store.fontSize
+
 createApp(App).use(router).use(store).mount('#app')

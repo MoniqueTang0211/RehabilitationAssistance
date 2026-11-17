@@ -42,6 +42,8 @@ npm run dev -- --host
 
 浏览器访问 `http://localhost:5173`，手机访问终端提示的 Network 地址。
 
+如需启用个人中心的一键拨号，在 `client/.env.development.local` 配置经团队确认的 `VITE_EMERGENCY_PHONE`。未配置时拨号按钮会禁用；不要猜测号码或提交真实号码。
+
 ## 协作流程速查
 
 1. 从 `dev` 拉出自己的功能分支：`git checkout -b feat/xxx`
