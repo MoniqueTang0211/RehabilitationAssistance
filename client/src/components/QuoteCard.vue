@@ -1,8 +1,43 @@
 <script setup>
-// 每日金句卡片组件（负责人：C）
-// TODO(C)：props { quote }，无数据时展示默认文案
+defineProps({
+  quote: {
+    type: Object,
+    default: null
+  }
+})
 </script>
 
 <template>
-  <div class="card">QuoteCard 占位</div>
+  <article class="card quote-card" aria-live="polite">
+    <blockquote v-if="quote && quote.content" class="quote-text">
+      “{{ quote.content }}”
+    </blockquote>
+    <p v-else class="quote-text">
+      愿你今天安心康复，每一点进步都值得肯定。
+    </p>
+    <time v-if="quote && quote.date" class="quote-date" :datetime="quote.date">
+      {{ quote.date }}
+    </time>
+  </article>
 </template>
+
+<style scoped>
+.quote-card {
+  border-left: 5px solid var(--color-primary);
+}
+
+.quote-text {
+  color: var(--color-text);
+  font-size: var(--font-lg);
+  line-height: 1.8;
+  text-align: center;
+}
+
+.quote-date {
+  display: block;
+  margin-top: 12px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-base);
+  text-align: right;
+}
+</style>

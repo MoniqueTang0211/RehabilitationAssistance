@@ -1,3 +1,7 @@
 // 登录接口（负责人：A）
-// TODO(A)：实现 login({ username, password })，POST /auth/login
 import request from './request'
+
+// 用户名密码登录，返回 { token, userInfo }
+export function login({ username, password }) {
+  return request.post('/auth/login', { username, password })
+}
