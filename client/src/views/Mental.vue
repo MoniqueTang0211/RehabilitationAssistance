@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import QuoteCard from '../components/QuoteCard.vue'
+import AppIcon from '../components/AppIcon.vue'
 import { getTodayQuote } from '../api/quote'
 
 const quote = ref(null)
@@ -24,8 +25,8 @@ onMounted(loadTodayQuote)
 </script>
 
 <template>
-  <main>
-    <h1 class="page-title">心理关怀</h1>
+  <main class="page-with-tab">
+    <h1 class="page-title"><AppIcon name="sun" :size="32" />心理关怀</h1>
     <p v-if="loading" class="page-message" role="status">正在为你准备今日金句…</p>
     <div v-else-if="errorMessage" class="page-message error-message" role="alert">
       <p>{{ errorMessage }}</p>

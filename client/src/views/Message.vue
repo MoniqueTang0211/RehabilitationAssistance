@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import MessageForm from '../components/MessageForm.vue'
+import AppIcon from '../components/AppIcon.vue'
 import { getPhrases, sendMessage } from '../api/message'
 import { showToast } from '../utils/toast'
 
@@ -59,10 +60,12 @@ onMounted(loadPhrases)
 
 <template>
   <main class="page-with-tab">
-    <h1 class="page-title">求助留言</h1>
+    <h1 class="page-title"><AppIcon name="message" :size="32" />求助留言</h1>
 
     <section class="section" aria-labelledby="phrases-title">
-      <h2 id="phrases-title" class="section-title">快捷语句</h2>
+      <h2 id="phrases-title" class="section-title">
+        <AppIcon name="zap" :size="26" />快捷语句
+      </h2>
       <p v-if="phrasesLoading" class="section-message" role="status">
         正在加载快捷语句…
       </p>
@@ -90,7 +93,9 @@ onMounted(loadPhrases)
     </section>
 
     <section class="section" aria-labelledby="custom-message-title">
-      <h2 id="custom-message-title" class="section-title">自定义留言</h2>
+      <h2 id="custom-message-title" class="section-title">
+        <AppIcon name="edit" :size="26" />自定义留言
+      </h2>
       <MessageForm
         v-model="draft"
         :submitting="submitting"
@@ -106,8 +111,15 @@ onMounted(loadPhrases)
 }
 
 .section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 0 var(--gap) 12px;
   font-size: var(--font-lg);
+}
+
+.section-title .app-icon {
+  color: var(--color-primary);
 }
 
 .section-message {

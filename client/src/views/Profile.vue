@@ -3,6 +3,7 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import FontSizeSetting from '../components/FontSizeSetting.vue'
+import AppIcon from '../components/AppIcon.vue'
 import { getProfile, saveSettings } from '../api/user'
 import store, { setFontSize, clearLogin } from '../store'
 import { dial } from '../utils/dial'
@@ -68,10 +69,12 @@ onMounted(loadProfile)
 
 <template>
   <main class="page-with-tab">
-    <h1 class="page-title">个人中心</h1>
+    <h1 class="page-title"><AppIcon name="user" :size="32" />个人中心</h1>
 
     <section class="card profile-card" aria-labelledby="profile-title">
-      <h2 id="profile-title" class="section-title">个人信息</h2>
+      <h2 id="profile-title" class="section-title">
+        <AppIcon name="heart" :size="26" />个人信息
+      </h2>
       <p v-if="loading" role="status">正在加载个人信息…</p>
       <div v-else-if="loadError" class="error-message" role="alert">
         <p>{{ loadError }}</p>
@@ -98,30 +101,43 @@ onMounted(loadProfile)
     />
 
     <section class="card emergency-card" aria-labelledby="emergency-title">
-      <h2 id="emergency-title" class="section-title">紧急求助</h2>
+      <h2 id="emergency-title" class="section-title">
+        <AppIcon name="phone" :size="26" />紧急求助
+      </h2>
       <p v-if="!emergencyPhone" class="phone-not-configured">
         紧急求助电话尚未配置，暂不能拨号。
       </p>
       <button
-        class="btn-primary"
+        class="btn-primary emergency-btn"
         type="button"
         :disabled="!emergencyPhone"
         @click="callEmergencyNumber"
       >
+        <AppIcon name="phone" :size="24" />
         {{ emergencyPhone ? `拨打 ${emergencyPhone}` : '紧急求助电话未配置' }}
       </button>
     </section>
 
     <section class="card logout-card">
-      <button class="btn-logout" type="button" @click="onLogout">退出登录</button>
+      <button class="btn-logout" type="button" @click="onLogout">
+        <AppIcon name="logout" :size="24" />
+        退出登录
+      </button>
     </section>
   </main>
 </template>
 
 <style scoped>
 .section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-bottom: 12px;
   font-size: var(--font-lg);
+}
+
+.section-title .app-icon {
+  color: var(--color-primary);
 }
 
 .profile-details {
@@ -159,8 +175,18 @@ onMounted(loadProfile)
   font-size: var(--font-base);
 }
 
+.emergency-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
 .btn-logout {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   width: 100%;
   height: var(--btn-height);
   border: 2px solid var(--color-text-secondary);

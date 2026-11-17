@@ -44,11 +44,18 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-/* 页面主标题 */
+/* 页面主标题（含统一矢量图标） */
 .page-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: var(--font-xl);
   font-weight: 700;
   padding: var(--gap);
+}
+
+.page-title .app-icon {
+  color: var(--color-primary);
 }
 
 /* 底部导航（App.vue 按 meta 控制显隐） */
@@ -58,7 +65,7 @@ body {
   left: 0;
   right: 0;
   display: flex;
-  height: 64px;
+  height: 74px;
   background: var(--color-card);
   border-top: 1px solid #eee;
 }
@@ -77,6 +84,10 @@ body {
 .tab-bar a.router-link-active {
   color: var(--color-primary);
   font-weight: 700;
+}
+
+.tab-bar .tab-icon {
+  margin-bottom: 3px;
 }
 
 /* 全局 toast 提示（utils/toast.js 使用） */
@@ -98,5 +109,5 @@ body {
 
 /* 业务页底部留出导航栏高度 */
 .page-with-tab {
-  padding-bottom: 80px;
+  padding-bottom: 94px;
 }

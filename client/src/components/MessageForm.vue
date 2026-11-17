@@ -1,4 +1,6 @@
 <script setup>
+import AppIcon from './AppIcon.vue'
+
 const props = defineProps({
   modelValue: {
     type: String,
@@ -39,6 +41,7 @@ function submit() {
         type="submit"
         :disabled="submitting || !modelValue.trim()"
       >
+        <AppIcon name="send" :size="24" />
         {{ submitting ? '正在发送…' : '发送留言' }}
       </button>
     </div>
@@ -84,6 +87,10 @@ function submit() {
 }
 
 .submit-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   width: 100%;
 }
 </style>

@@ -2,6 +2,7 @@
 // 登录页（负责人：A）：用户名/密码表单 → login → setLogin → 跳首页
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import AppIcon from '../components/AppIcon.vue'
 import { login } from '../api/auth'
 import { setLogin } from '../store'
 import { showToast } from '../utils/toast'
@@ -34,6 +35,9 @@ async function onSubmit() {
 
 <template>
   <div class="login-page">
+    <div class="login-logo">
+      <AppIcon name="activity" :size="64" />
+    </div>
     <h1 class="login-title">老年康复辅助平台</h1>
     <p class="login-sub">请登录您的账号</p>
 
@@ -57,6 +61,13 @@ async function onSubmit() {
 .login-page {
   min-height: 100vh;
   padding-top: 80px;
+}
+
+.login-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+  color: var(--color-primary);
 }
 
 .login-title {

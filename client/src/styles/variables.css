@@ -3,21 +3,21 @@
 /* 字号三档：页面根元素按 store.fontSize 挂 data-font="small|medium|large" 生效 */
 :root,
 [data-font='medium'] {
-  --font-base: 18px;
-  --font-lg: 22px;
-  --font-xl: 28px;
+  --font-base: 22px;
+  --font-lg: 26px;
+  --font-xl: 34px;
 }
 
 [data-font='small'] {
-  --font-base: 16px;
-  --font-lg: 20px;
-  --font-xl: 24px;
+  --font-base: 20px;
+  --font-lg: 24px;
+  --font-xl: 28px;
 }
 
 [data-font='large'] {
-  --font-base: 20px;
-  --font-lg: 26px;
-  --font-xl: 34px;
+  --font-base: 24px;
+  --font-lg: 30px;
+  --font-xl: 40px;
 }
 
 /* 配色与间距 */
@@ -32,5 +32,5 @@
   --color-card: #ffffff;
   --radius: 12px;
   --gap: 16px;
-  --btn-height: 56px;         /* 适老化大按钮高度 */
+  --btn-height: 60px;         /* 适老化大按钮高度 */
 }

@@ -1,4 +1,6 @@
 <script setup>
+import AppIcon from './AppIcon.vue'
+
 defineProps({
   quote: {
     type: Object,
@@ -9,6 +11,9 @@ defineProps({
 
 <template>
   <article class="card quote-card" aria-live="polite">
+    <div class="quote-icon">
+      <AppIcon name="quote" :size="32" />
+    </div>
     <blockquote v-if="quote && quote.content" class="quote-text">
       “{{ quote.content }}”
     </blockquote>
@@ -24,6 +29,13 @@ defineProps({
 <style scoped>
 .quote-card {
   border-left: 5px solid var(--color-primary);
+}
+
+.quote-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+  color: var(--color-primary);
 }
 
 .quote-text {

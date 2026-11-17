@@ -1,6 +1,8 @@
 <script setup>
 // 字体设置组件（负责人：C）：小/中/大三档切换，选中态高亮
 // props：fontSize 当前档位、disabled 保存中禁用；emit('change', size) 供父组件保存
+import AppIcon from './AppIcon.vue'
+
 defineProps({
   fontSize: {
     type: String,
@@ -23,7 +25,9 @@ const options = [
 
 <template>
   <section class="card font-size-setting" aria-labelledby="font-size-title">
-    <h2 id="font-size-title" class="setting-title">字体大小</h2>
+    <h2 id="font-size-title" class="setting-title">
+      <AppIcon name="type" :size="26" />字体大小
+    </h2>
     <div class="font-options">
       <button
         v-for="option in options"
@@ -43,8 +47,15 @@ const options = [
 
 <style scoped>
 .setting-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-bottom: 12px;
   font-size: var(--font-lg);
+}
+
+.setting-title .app-icon {
+  color: var(--color-primary);
 }
 
 .font-options {

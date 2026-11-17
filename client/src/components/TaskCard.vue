@@ -4,6 +4,7 @@
 // props：item 任务数据（含 status）、busy 是否提交中；按钮触发打卡
 import { ref } from 'vue'
 import $ from 'jquery'
+import AppIcon from './AppIcon.vue'
 
 const props = defineProps({
   item: { type: Object, required: true },
@@ -26,10 +27,19 @@ function toggleDetail() {
     <div class="task-head" @click="toggleDetail">
       <div class="task-info">
         <div class="task-title">{{ item.title }}</div>
-        <div class="task-meta">建议 {{ item.duration }} 分钟 · 点击{{ expanded ? '收起' : '查看' }}图文指引</div>
+        <div class="task-meta">
+          <AppIcon name="clock" :size="18" />
+          <span class="task-meta-text">
+            建议 {{ item.duration }} 分钟 · 点击{{ expanded ? '收起' : '查看' }}图文指引
+          </span>
+        </div>
       </div>
-      <span class="badge" :class="{ done: item.status === 'done' }">
-        {{ item.status === 'done' ? '已打卡' : '待打卡' }}
+      <span class="task-head-right">
+        <span class="badge" :class="{ done: item.status === 'done' }">
+          <AppIcon v-if="item.status === 'done'" name="check" :size="18" />
+          {{ item.status === 'done' ? '已打卡' : '待打卡' }}
+        </span>
+        <AppIcon class="task-chevron" :class="{ open: expanded }" name="chevron-down" :size="22" />
       </span>
     </div>
 
@@ -40,10 +50,11 @@ function toggleDetail() {
     </div>
 
     <button
-      class="btn-primary"
+      class="btn-primary task-checkin-btn"
       :disabled="item.status === 'done' || busy"
       @click="emit('checkin', item)"
     >
+      <AppIcon v-if="item.status === 'done'" name="check" :size="24" />
       {{ item.status === 'done' ? '已完成打卡' : busy ? '提交中…' : '完成打卡' }}
     </button>
   </div>
@@ -54,7 +65,13 @@ function toggleDetail() {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
   padding-bottom: 12px;
+}
+
+.task-info {
+  flex: 1;
+  min-width: 0;
 }
 
 .task-title {
@@ -63,13 +80,44 @@ function toggleDetail() {
 }
 
 .task-meta {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
   font-size: var(--font-base);
   color: var(--color-text-secondary);
   margin-top: 4px;
 }
 
-.badge {
+.task-meta .app-icon {
+  margin-top: 5px;
+}
+
+.task-meta-text {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.4;
+}
+
+.task-head-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex-shrink: 0;
+}
+
+.task-chevron {
+  color: var(--color-text-secondary);
+  transition: transform 0.2s ease;
+}
+
+.task-chevron.open {
+  transform: rotate(180deg);
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   padding: 6px 14px;
   border-radius: 999px;
   font-size: var(--font-base);
@@ -100,5 +148,12 @@ function toggleDetail() {
 
 button {
   margin-top: 4px;
+}
+
+.task-checkin-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 </style>

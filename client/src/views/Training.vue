@@ -3,6 +3,7 @@
 import { ref, computed, onMounted } from 'vue'
 import TaskCard from '../components/TaskCard.vue'
 import ProgressBar from '../components/ProgressBar.vue'
+import AppIcon from '../components/AppIcon.vue'
 import { getTodayPlan, checkin, getRecords } from '../api/plan'
 import { showToast } from '../utils/toast'
 
@@ -82,43 +83,45 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="page-title">今日康复训练</div>
+  <main class="page-with-tab">
+    <div class="page-title"><AppIcon name="dumbbell" :size="32" />今日康复训练</div>
 
-  <!-- 今日完成度 -->
-  <div v-if="!loading && tasks.length > 0" class="card summary">
-    <div class="summary-text">今日完成 {{ doneCount }} / {{ tasks.length }} 项</div>
-    <ProgressBar :percent="todayPercent" />
-  </div>
+    <!-- 今日完成度 -->
+    <div v-if="!loading && tasks.length > 0" class="card summary">
+      <div class="summary-text">今日完成 {{ doneCount }} / {{ tasks.length }} 项</div>
+      <ProgressBar :percent="todayPercent" />
+    </div>
 
-  <div v-if="loading" class="card empty-tip">加载中…</div>
-  <div v-else-if="tasks.length === 0" class="card empty-tip">今日暂无任务，好好休息</div>
+    <div v-if="loading" class="card empty-tip">加载中…</div>
+    <div v-else-if="tasks.length === 0" class="card empty-tip">今日暂无任务，好好休息</div>
 
-  <template v-else>
-    <TaskCard
-      v-for="item in tasks"
-      :key="item.taskId"
-      :item="item"
-      :busy="busyTaskId === item.taskId"
-      @checkin="onCheckin"
-    />
-  </template>
+    <template v-else>
+      <TaskCard
+        v-for="item in tasks"
+        :key="item.taskId"
+        :item="item"
+        :busy="busyTaskId === item.taskId"
+        @checkin="onCheckin"
+      />
+    </template>
 
-  <!-- 历史打卡记录 -->
-  <div v-if="!loading && historyGroups.length > 0" class="history">
-    <div class="history-title">历史打卡记录</div>
-    <div v-for="g in historyGroups" :key="g.date" class="card history-card">
-      <div class="history-date">
-        {{ g.date }}
-        <span class="history-stat">完成 {{ g.done }} / {{ g.items.length }} 项</span>
-      </div>
-      <div v-for="r in g.items" :key="r.id" class="history-item">
-        <span>{{ r.title }}</span>
-        <span class="history-right" :class="{ missed: r.status !== 'done' }">
-          {{ r.status === 'done' ? `已打卡 ${fmtTime(r.checkedAt)}` : '未完成' }}
-        </span>
+    <!-- 历史打卡记录 -->
+    <div v-if="!loading && historyGroups.length > 0" class="history">
+      <div class="history-title"><AppIcon name="clock" :size="26" />历史打卡记录</div>
+      <div v-for="g in historyGroups" :key="g.date" class="card history-card">
+        <div class="history-date">
+          {{ g.date }}
+          <span class="history-stat">完成 {{ g.done }} / {{ g.items.length }} 项</span>
+        </div>
+        <div v-for="r in g.items" :key="r.id" class="history-item">
+          <span>{{ r.title }}</span>
+          <span class="history-right" :class="{ missed: r.status !== 'done' }">
+            {{ r.status === 'done' ? `已打卡 ${fmtTime(r.checkedAt)}` : '未完成' }}
+          </span>
+        </div>
       </div>
     </div>
-  </div>
+  </main>
 </template>
 
 <style scoped>
@@ -144,9 +147,16 @@ onMounted(load)
 }
 
 .history-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: var(--font-lg);
   font-weight: 700;
   margin-bottom: 12px;
+}
+
+.history-title .app-icon {
+  color: var(--color-primary);
 }
 
 .history-card {

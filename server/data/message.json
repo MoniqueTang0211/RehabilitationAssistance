@@ -1,1 +1,47 @@
-[]
+[
+  {
+    "id": "dd7acbf9-7cc9-47aa-ab5c-fa51638d8815",
+    "userId": "user-001",
+    "type": "quick",
+    "quickPhraseId": "phrase-003",
+    "content": "我想咨询康复训练",
+    "status": "pending",
+    "createdAt": "2026-11-17T11:50:39.910Z"
+  },
+  {
+    "id": "14290867-1b56-4d00-a9fc-efd234388b8c",
+    "userId": "user-001",
+    "type": "quick",
+    "quickPhraseId": "phrase-004",
+    "content": "我需要康复师帮助",
+    "status": "pending",
+    "createdAt": "2026-11-17T11:50:41.780Z"
+  },
+  {
+    "id": "444aa258-324e-4aad-8768-8550a1199774",
+    "userId": "user-001",
+    "type": "quick",
+    "quickPhraseId": "phrase-001",
+    "content": "我今天感觉不太舒服",
+    "status": "pending",
+    "createdAt": "2026-11-17T11:50:43.039Z"
+  },
+  {
+    "id": "33728db2-f47a-42f9-8625-c2ad7b714835",
+    "userId": "user-001",
+    "type": "quick",
+    "quickPhraseId": "phrase-003",
+    "content": "我想咨询康复训练",
+    "status": "pending",
+    "createdAt": "2026-11-17T11:50:44.706Z"
+  },
+  {
+    "id": "5a359549-39a5-4781-ba7f-da5b00b362a8",
+    "userId": "user-001",
+    "type": "quick",
+    "quickPhraseId": "phrase-003",
+    "content": "我想咨询康复训练",
+    "status": "pending",
+    "createdAt": "2026-11-17T11:50:46.394Z"
+  }
+]
