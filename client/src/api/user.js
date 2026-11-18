@@ -10,3 +10,8 @@ export function getProfile() {
 export function saveSettings({ fontSize }) {
   return request.put('/user/settings', { fontSize })
 }
+
+// 设置或修改密保问题（需当前密码），返回 { securityQuestion, hasSecurityQuestion }
+export function saveSecurityQuestion({ currentPassword, securityQuestion, securityAnswer }) {
+  return request.put('/user/security-question', { currentPassword, securityQuestion, securityAnswer })
+}

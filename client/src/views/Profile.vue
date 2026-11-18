@@ -4,7 +4,8 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import FontSizeSetting from '../components/FontSizeSetting.vue'
 import AppIcon from '../components/AppIcon.vue'
-import { getProfile, saveSettings } from '../api/user'
+import { getProfile, saveSettings, saveSecurityQuestion } from '../api/user'
+import { SECURITY_QUESTIONS } from '../api/auth'
 import store, { setFontSize, clearLogin, settings, setSetting } from '../store'
 import { dial } from '../utils/dial'
 import { showToast } from '../utils/toast'
@@ -17,6 +18,52 @@ const loadError = ref('')
 const savingFontSize = ref(false)
 const settingsOpen = ref(false)
 const emergencyPhone = (import.meta.env.VITE_EMERGENCY_PHONE || '').trim()
+
+// 密保问题弹层
+const securityOpen = ref(false)
+const savingSecurity = ref(false)
+const sPassword = ref('')
+const sQuestion = ref('')
+const sAnswer = ref('')
+
+function openSecurity() {
+  sPassword.value = ''
+  sQuestion.value = ''
+  sAnswer.value = ''
+  securityOpen.value = true
+}
+
+async function onSaveSecurity() {
+  if (savingSecurity.value) return
+  if (!sPassword.value) {
+    showToast('请输入当前密码')
+    return
+  }
+  if (!sQuestion.value) {
+    showToast('请选择密保问题')
+    return
+  }
+  const answer = sAnswer.value.trim()
+  if (answer.length < 2 || answer.length > 30) {
+    showToast('密保答案需为 2-30 个字')
+    return
+  }
+  savingSecurity.value = true
+  try {
+    await saveSecurityQuestion({
+      currentPassword: sPassword.value,
+      securityQuestion: sQuestion.value,
+      securityAnswer: answer
+    })
+    if (profile.value) profile.value.hasSecurityQuestion = true
+    securityOpen.value = false
+    showToast('密保问题已保存')
+  } catch (error) {
+    showToast(error.message || '保存失败，请稍后重试')
+  } finally {
+    savingSecurity.value = false
+  }
+}
 
 async function loadProfile() {
   loading.value = true
@@ -104,6 +151,23 @@ onMounted(loadProfile)
       </dl>
     </section>
 
+    <section class="card security-card" aria-labelledby="security-title">
+      <h2 id="security-title" class="section-title">
+        <AppIcon name="lock" :size="26" />账号安全
+      </h2>
+      <div class="security-row">
+        <div class="security-text">
+          <p class="security-state">
+            密保问题：{{ profile?.hasSecurityQuestion ? '已设置' : '未设置' }}
+          </p>
+          <p class="security-desc">忘记密码时需答对密保问题才能重置</p>
+        </div>
+        <button class="btn-outline" type="button" @click="openSecurity">
+          {{ profile?.hasSecurityQuestion ? '修改' : '去设置' }}
+        </button>
+      </div>
+    </section>
+
     <FontSizeSetting
       :font-size="profile?.fontSize || store.fontSize"
       :disabled="savingFontSize"
@@ -189,6 +253,52 @@ onMounted(loadProfile)
           完成
         </button>
       </section>
+    </div>
+
+    <div v-if="securityOpen" class="settings-mask" @click.self="securityOpen = false">
+      <form
+        class="settings-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="security-modal-title"
+        @submit.prevent="onSaveSecurity"
+      >
+        <div class="settings-head">
+          <h2 id="security-modal-title" class="settings-title">设置密保问题</h2>
+          <button class="icon-btn" type="button" aria-label="关闭" @click="securityOpen = false">
+            <AppIcon name="close" :size="28" />
+          </button>
+        </div>
+        <p class="security-tip">
+          忘记密码时需要回答此问题才能重置，请设置一个只有您知道的答案。
+        </p>
+        <label class="field">
+          <span class="field-label">当前密码</span>
+          <input
+            v-model="sPassword"
+            type="password"
+            placeholder="请输入当前登录密码"
+            autocomplete="current-password"
+          />
+        </label>
+        <label class="field">
+          <span class="field-label">密保问题</span>
+          <select v-model="sQuestion">
+            <option value="" disabled>请选择密保问题</option>
+            <option v-for="q in SECURITY_QUESTIONS" :key="q" :value="q">{{ q }}</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field-label">密保答案</span>
+          <input v-model="sAnswer" type="text" placeholder="请填写答案（2-30 个字）" autocomplete="off" />
+        </label>
+        <button class="btn-primary" type="submit" :disabled="savingSecurity">
+          {{ savingSecurity ? '保存中…' : '保存' }}
+        </button>
+        <button class="btn-cancel-lg" type="button" :disabled="savingSecurity" @click="securityOpen = false">
+          取消
+        </button>
+      </form>
     </div>
   </main>
 </template>
@@ -306,6 +416,90 @@ onMounted(loadProfile)
 
 .settings-done {
   margin-top: 20px;
+}
+
+.security-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.security-text {
+  flex: 1;
+}
+
+.security-state {
+  margin-bottom: 4px;
+  font-size: var(--font-base);
+  font-weight: 600;
+}
+
+.security-desc,
+.security-tip {
+  font-size: var(--font-base);
+  color: var(--color-text-secondary);
+}
+
+.security-tip {
+  margin-bottom: 20px;
+}
+
+.btn-outline {
+  flex-shrink: 0;
+  padding: 10px 20px;
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius);
+  background-color: transparent;
+  color: var(--color-primary);
+  font-size: var(--font-base);
+  font-weight: 600;
+}
+
+.field {
+  display: block;
+  margin-bottom: 20px;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: var(--font-base);
+  color: var(--color-text-secondary);
+}
+
+.field input,
+.field select {
+  width: 100%;
+  height: var(--btn-height);
+  padding: 0 16px;
+  border: 2px solid #ddd;
+  border-radius: var(--radius);
+  background-color: #fff;
+  color: var(--color-text);
+  font-size: var(--font-lg);
+}
+
+.field input:focus,
+.field select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.btn-cancel-lg {
+  display: block;
+  width: 100%;
+  height: var(--btn-height);
+  margin-top: 12px;
+  border: 2px solid #ccc;
+  border-radius: var(--radius);
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--font-base);
+  font-weight: 600;
+}
+
+.btn-cancel-lg:disabled {
+  opacity: 0.5;
 }
 
 .section-title {

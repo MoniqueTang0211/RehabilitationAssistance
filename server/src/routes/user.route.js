@@ -19,4 +19,14 @@ router.put('/settings', (req, res, next) => {
   res.json(ok(userService.saveSettings(req.userId, fontSize)))
 })
 
+// PUT /api/user/security-question 设置或修改密保问题（需登录 + 当前密码）
+router.put('/security-question', async (req, res, next) => {
+  try {
+    const data = await userService.saveSecurityQuestion(req.userId, req.body || {})
+    res.json(ok(data))
+  } catch (err) {
+    next(err)
+  }
+})
+
 module.exports = router

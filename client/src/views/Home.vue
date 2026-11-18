@@ -1,16 +1,22 @@
 <script setup>
-// 首页（负责人：A）：康复进度 + 今日任务概览 + 今日金句 + 快捷入口
+// 首页（负责人：A）：康复进度 + 今日任务概览 + 每日心情记录
 import { computed, onMounted, ref } from 'vue'
 import ProgressBar from '../components/ProgressBar.vue'
-import QuoteCard from '../components/QuoteCard.vue'
 import AppIcon from '../components/AppIcon.vue'
 import { getProgress } from '../api/progress'
 import { getTodayPlan } from '../api/plan'
-import { getTodayQuote } from '../api/quote'
 import { settings } from '../store'
 import { showToast } from '../utils/toast'
 
 const stageMap = { early: '康复初期', middle: '康复中期', late: '康复后期' }
+
+const MOOD_LABELS = {
+  great: '很好',
+  good: '还不错',
+  normal: '一般',
+  tired: '有点累',
+  unwell: '不舒服'
+}
 
 const progress = ref(null)
 const loading = ref(true)
@@ -18,7 +24,27 @@ const loading = ref(true)
 const tasks = ref([])
 const tasksLoading = ref(true)
 
-const quote = ref(null)
+// 近 7 天心情记录，数据来自心理关怀页按日期保存的本地记录
+const moodRecords = ref([])
+
+function buildMoodRecords() {
+  const list = []
+  const now = new Date()
+  for (let i = 0; i < 7; i += 1) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i)
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    const key = `${d.getFullYear()}-${month}-${day}`
+    const moodId = localStorage.getItem(`rehab-mood-${key}`) || ''
+    list.push({
+      key,
+      dateText: i === 0 ? '今天' : `${d.getMonth() + 1}月${d.getDate()}日`,
+      moodText: MOOD_LABELS[moodId] || '',
+      note: localStorage.getItem(`rehab-mood-note-${key}`) || ''
+    })
+  }
+  return list
+}
 
 const doneCount = computed(() => tasks.value.filter((t) => t.status === 'done').length)
 const totalCount = computed(() => tasks.value.length)
@@ -56,18 +82,10 @@ async function loadTodayPlan() {
   }
 }
 
-async function loadQuote() {
-  try {
-    quote.value = await getTodayQuote()
-  } catch (e) {
-    quote.value = null
-  }
-}
-
 onMounted(() => {
   loadProgress()
   loadTodayPlan()
-  loadQuote()
+  moodRecords.value = buildMoodRecords()
 })
 </script>
 
@@ -125,17 +143,32 @@ onMounted(() => {
         </template>
       </section>
 
-      <QuoteCard :quote="quote" />
+      <section class="card" aria-labelledby="mood-record-title">
+        <div class="section-head">
+          <h2 id="mood-record-title" class="section-title">
+            <AppIcon name="heart" :size="26" />每日心情记录
+          </h2>
+          <router-link class="record-link" to="/mental">去记录</router-link>
+        </div>
 
-      <section class="quick-entry" aria-label="快捷入口">
-        <router-link class="quick-card" to="/mental">
-          <AppIcon name="sun" :size="30" />
-          <span>心理关怀</span>
-        </router-link>
-        <router-link class="quick-card" to="/message">
-          <AppIcon name="message" :size="30" />
-          <span>求助留言</span>
-        </router-link>
+        <table class="mood-table">
+          <thead>
+            <tr>
+              <th scope="col">日期</th>
+              <th scope="col">心情</th>
+              <th scope="col">备注</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="record in moodRecords" :key="record.key">
+              <td class="date-cell">{{ record.dateText }}</td>
+              <td :class="record.moodText ? 'mood-cell' : 'muted'">
+                {{ record.moodText || '未记录' }}
+              </td>
+              <td :class="record.note ? 'note-cell' : 'muted'">{{ record.note || '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
       </section>
     </template>
   </main>
@@ -249,28 +282,53 @@ onMounted(() => {
   text-decoration: none;
 }
 
-.quick-entry {
-  display: flex;
-  gap: var(--gap);
-  margin: 0 var(--gap) var(--gap);
-}
-
-.quick-card {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 18px 12px;
-  border-radius: var(--radius);
-  background-color: var(--color-card);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  color: var(--color-text);
+.record-link {
   font-size: var(--font-base);
+  color: var(--color-primary);
   text-decoration: none;
+  white-space: nowrap;
 }
 
-.quick-card .app-icon {
+.mood-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-base);
+}
+
+.mood-table th,
+.mood-table td {
+  padding: 10px 6px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.mood-table th {
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.mood-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.date-cell {
+  white-space: nowrap;
+}
+
+.mood-cell {
   color: var(--color-primary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.note-cell {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.muted {
+  color: var(--color-text-secondary);
 }
 </style>
