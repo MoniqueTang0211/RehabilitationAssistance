@@ -5,7 +5,7 @@ import { useRouter } from 'vue-router'
 import FontSizeSetting from '../components/FontSizeSetting.vue'
 import AppIcon from '../components/AppIcon.vue'
 import { getProfile, saveSettings } from '../api/user'
-import store, { setFontSize, clearLogin } from '../store'
+import store, { setFontSize, clearLogin, settings, setSetting } from '../store'
 import { dial } from '../utils/dial'
 import { showToast } from '../utils/toast'
 
@@ -15,6 +15,7 @@ const profile = ref(null)
 const loading = ref(true)
 const loadError = ref('')
 const savingFontSize = ref(false)
+const settingsOpen = ref(false)
 const emergencyPhone = (import.meta.env.VITE_EMERGENCY_PHONE || '').trim()
 
 async function loadProfile() {
@@ -64,12 +65,21 @@ function onLogout() {
   router.replace({ name: 'login' })
 }
 
+function toggleSetting(key) {
+  setSetting(key, !settings[key])
+}
+
 onMounted(loadProfile)
 </script>
 
 <template>
   <main class="page-with-tab">
-    <h1 class="page-title"><AppIcon name="user" :size="32" />个人中心</h1>
+    <div class="page-header">
+      <h1 class="page-title"><AppIcon name="user" :size="32" />个人中心</h1>
+      <button class="settings-btn" type="button" @click="settingsOpen = true">
+        <AppIcon name="settings" :size="24" />设置
+      </button>
+    </div>
 
     <section class="card profile-card" aria-labelledby="profile-title">
       <h2 id="profile-title" class="section-title">
@@ -124,10 +134,180 @@ onMounted(loadProfile)
         退出登录
       </button>
     </section>
+
+    <div v-if="settingsOpen" class="settings-mask" @click.self="settingsOpen = false">
+      <section
+        class="settings-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-title"
+      >
+        <div class="settings-head">
+          <h2 id="settings-title" class="settings-title">系统设置</h2>
+          <button class="icon-btn" type="button" aria-label="关闭设置" @click="settingsOpen = false">
+            <AppIcon name="close" :size="28" />
+          </button>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-text">
+            <p class="setting-name">护眼模式</p>
+            <p class="setting-desc">米黄暖色背景，减少强光刺激</p>
+          </div>
+          <button
+            class="switch"
+            :class="{ on: settings.eyeCare }"
+            type="button"
+            role="switch"
+            aria-label="护眼模式"
+            :aria-checked="settings.eyeCare"
+            @click="toggleSetting('eyeCare')"
+          >
+            <span class="switch-knob" />
+          </button>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-text">
+            <p class="setting-name">训练提醒</p>
+            <p class="setting-desc">进入首页时提醒今天未完成的训练</p>
+          </div>
+          <button
+            class="switch"
+            :class="{ on: settings.reminders }"
+            type="button"
+            role="switch"
+            aria-label="训练提醒"
+            :aria-checked="settings.reminders"
+            @click="toggleSetting('reminders')"
+          >
+            <span class="switch-knob" />
+          </button>
+        </div>
+
+        <button class="btn-primary settings-done" type="button" @click="settingsOpen = false">
+          完成
+        </button>
+      </section>
+    </div>
   </main>
 </template>
 
 <style scoped>
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: var(--gap);
+}
+
+.settings-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius);
+  background-color: transparent;
+  color: var(--color-primary);
+  font-size: var(--font-base);
+  font-weight: 600;
+}
+
+.settings-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.45);
+}
+
+.settings-panel {
+  width: 100%;
+  max-width: 560px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 20px var(--gap) calc(var(--gap) + 8px);
+  border-radius: 20px 20px 0 0;
+  background-color: var(--color-card);
+}
+
+.settings-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.settings-title {
+  font-size: var(--font-lg);
+}
+
+.icon-btn {
+  padding: 4px;
+  border: none;
+  background: none;
+  color: var(--color-text-secondary);
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.setting-text {
+  flex: 1;
+}
+
+.setting-name {
+  margin-bottom: 4px;
+  font-size: var(--font-base);
+  font-weight: 600;
+}
+
+.setting-desc {
+  font-size: var(--font-base);
+  color: var(--color-text-secondary);
+}
+
+.switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 62px;
+  height: 36px;
+  border: none;
+  border-radius: 18px;
+  background-color: #c9c9c9;
+}
+
+.switch.on {
+  background-color: var(--color-primary);
+}
+
+.switch-knob {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: #fff;
+  transition: left 0.2s;
+}
+
+.switch.on .switch-knob {
+  left: 30px;
+}
+
+.settings-done {
+  margin-top: 20px;
+}
+
 .section-title {
   display: flex;
   align-items: center;
