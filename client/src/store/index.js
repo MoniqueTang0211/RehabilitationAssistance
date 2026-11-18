@@ -1,4 +1,4 @@
-// 跨页面共享状态：登录态、用户信息、字号档位
+// 跨页面共享状态：登录态、用户信息、字号档位、系统设置
 // 轻量 reactive，不引入 pinia
 import { reactive } from 'vue'
 
@@ -7,6 +7,30 @@ const state = reactive({
   userInfo: null, // { id, username, name, age, fontSize }
   fontSize: localStorage.getItem('fontSize') || 'medium'
 })
+
+// 系统设置：护眼模式、训练提醒
+const SETTING_KEYS = {
+  eyeCare: 'rehab-eye-care',
+  reminders: 'rehab-reminders'
+}
+
+export const settings = reactive({
+  eyeCare: localStorage.getItem(SETTING_KEYS.eyeCare) === '1',
+  reminders: localStorage.getItem(SETTING_KEYS.reminders) !== '0'
+})
+
+// 把设置挂到根元素，触发 global.css 的主题切换
+export function applySettings() {
+  document.documentElement.dataset.eye = settings.eyeCare ? 'on' : 'off'
+}
+
+export function setSetting(key, value) {
+  settings[key] = value
+  localStorage.setItem(SETTING_KEYS[key], value ? '1' : '0')
+  applySettings()
+}
+
+applySettings()
 
 // 把字号档位挂到页面根元素，触发 variables.css 的 data-font 变量切换
 export function applyFontSize(size) {

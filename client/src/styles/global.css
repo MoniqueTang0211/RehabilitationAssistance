@@ -111,3 +111,12 @@ body {
 .page-with-tab {
   padding-bottom: 94px;
 }
+
+/* 护眼模式：暖色米黄背景，降低强光刺激（store 挂 data-eye="on" 生效） */
+html[data-eye='on'] {
+  --color-bg: #f3ead6;
+  --color-card: #fffcf3;
+  --color-text: #3a3226;
+  --color-text-secondary: #6d6353;
+}
+
