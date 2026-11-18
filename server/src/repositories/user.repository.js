@@ -15,10 +15,18 @@ function findByName(username) {
   return findAll().find((u) => u.username === username) || null
 }
 
+function create(user) {
+  const all = findAll()
+  const created = { id: `user-${Date.now()}`, ...user }
+  all.push(created)
+  writeJson(FILE, all)
+  return created
+}
+
 function update(updated) {
   const all = findAll().map((u) => (u.id === updated.id ? updated : u))
   writeJson(FILE, all)
   return updated
 }
 
-module.exports = { findAll, findById, findByName, update }
+module.exports = { findAll, findById, findByName, create, update }
