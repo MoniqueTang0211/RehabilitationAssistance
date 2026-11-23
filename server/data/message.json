@@ -52,5 +52,14 @@
     "content": "请帮我联系家人",
     "status": "pending",
     "createdAt": "2026-11-23T01:08:10.814Z"
+  },
+  {
+    "id": "9942457f-0a63-456a-9596-5e0489ed6b26",
+    "userId": "user-1795396153809",
+    "type": "custom",
+    "quickPhraseId": null,
+    "content": "今天心情不错哟。",
+    "status": "pending",
+    "createdAt": "2026-11-23T02:45:26.097Z"
   }
 ]
