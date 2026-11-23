@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import MessageForm from '../components/MessageForm.vue'
 import AppIcon from '../components/AppIcon.vue'
 import { getPhrases, sendMessage } from '../api/message'
@@ -10,6 +10,11 @@ const phrasesLoading = ref(true)
 const phrasesError = ref('')
 const submitting = ref(false)
 const draft = ref('')
+const selectedPhraseId = ref(null)
+
+const selectedPhrase = computed(
+  () => phrases.value.find((phrase) => phrase.id === selectedPhraseId.value) || null
+)
 
 async function loadPhrases() {
   phrasesLoading.value = true
@@ -30,7 +35,7 @@ async function loadPhrases() {
 
 async function submitMessage(payload) {
   if (submitting.value) {
-    return
+    return false
   }
 
   submitting.value = true
@@ -40,8 +45,10 @@ async function submitMessage(payload) {
       draft.value = ''
     }
     showToast('留言已发送，谢谢你告诉我们。')
+    return true
   } catch (error) {
     showToast(error.message || '留言发送失败，请稍后重试')
+    return false
   } finally {
     submitting.value = false
   }
@@ -49,6 +56,29 @@ async function submitMessage(payload) {
 
 function submitQuickPhrase(phrase) {
   return submitMessage({ type: 'quick', quickPhraseId: phrase.id })
+}
+
+function selectPhrase(phrase) {
+  if (submitting.value) {
+    return
+  }
+  selectedPhraseId.value = selectedPhraseId.value === phrase.id ? null : phrase.id
+}
+
+function clearSelection() {
+  selectedPhraseId.value = null
+}
+
+async function sendSelectedPhrase() {
+  const phrase = selectedPhrase.value
+  if (!phrase) {
+    return
+  }
+
+  const success = await submitQuickPhrase(phrase)
+  if (success) {
+    selectedPhraseId.value = null
+  }
 }
 
 function submitCustomMessage(content) {
@@ -83,11 +113,34 @@ onMounted(loadPhrases)
           v-for="phrase in phrases"
           :key="phrase.id"
           class="phrase-button"
+          :class="{ 'is-selected': selectedPhraseId === phrase.id }"
           type="button"
           :disabled="submitting"
-          @click="submitQuickPhrase(phrase)"
+          :aria-pressed="selectedPhraseId === phrase.id"
+          @click="selectPhrase(phrase)"
         >
-          {{ phrase.content }}
+          <span class="phrase-text">{{ phrase.content }}</span>
+          <span v-if="selectedPhraseId === phrase.id" class="phrase-badge">
+            <AppIcon name="check" :size="22" />已选
+          </span>
+        </button>
+      </div>
+      <div v-if="selectedPhrase" class="phrase-actions">
+        <button
+          class="btn-primary phrase-send"
+          type="button"
+          :disabled="submitting"
+          @click="sendSelectedPhrase"
+        >
+          <AppIcon name="send" :size="24" />发送留言
+        </button>
+        <button
+          class="phrase-undo"
+          type="button"
+          :disabled="submitting"
+          @click="clearSelection"
+        >
+          <AppIcon name="close" :size="24" />撤销
         </button>
       </div>
     </section>
@@ -144,6 +197,10 @@ onMounted(loadPhrases)
 }
 
 .phrase-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   min-height: var(--btn-height);
   padding: 12px 16px;
   border: 2px solid var(--color-primary);
@@ -155,7 +212,65 @@ onMounted(loadPhrases)
   text-align: left;
 }
 
+.phrase-button.is-selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
+}
+
+.phrase-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--color-primary);
+  font-size: var(--font-base);
+  font-weight: 700;
+}
+
 .phrase-button:disabled {
   opacity: 0.6;
+}
+
+.phrase-actions {
+  display: flex;
+  gap: 12px;
+  padding: 12px var(--gap) 0;
+}
+
+.phrase-send {
+  flex: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.phrase-undo {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: var(--btn-height);
+  border: 2px solid var(--color-text-secondary);
+  border-radius: var(--radius);
+  background: var(--color-card);
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: var(--font-lg);
+  font-weight: 600;
+}
+
+.phrase-undo:active {
+  opacity: 0.85;
+}
+
+.phrase-undo:disabled {
+  opacity: 0.5;
 }
 </style>
