@@ -4,5 +4,6 @@ module.exports = {
   REHAB_STAGE: ['early', 'middle', 'late'],
   PLAN_STATUS: ['pending', 'done'],
   MESSAGE_TYPE: ['quick', 'custom'],
-  MESSAGE_STATUS: ['pending', 'read']
+  MESSAGE_STATUS: ['pending', 'read'],
+  MOOD: ['great', 'good', 'normal', 'tired', 'unwell']
 }

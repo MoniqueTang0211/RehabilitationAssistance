@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import QuoteCard from '../components/QuoteCard.vue'
 import AppIcon from '../components/AppIcon.vue'
 import { getTodayQuote } from '../api/quote'
+import { getTodayMood, saveTodayMood } from '../api/mood'
 import { showToast } from '../utils/toast'
 
 // ===== 今日金句 =====
@@ -23,7 +24,7 @@ async function loadTodayQuote() {
   }
 }
 
-// ===== 今日心情打卡（本地保存，按日期区分）=====
+// ===== 今日心情打卡（保存到后端账号下，按日期区分）=====
 const moods = [
   {
     id: 'great',
@@ -57,31 +58,32 @@ const moods = [
   }
 ]
 
-function dateKey() {
-  const d = new Date()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${d.getFullYear()}-${m}-${day}`
-}
-
-const moodStorageKey = `rehab-mood-${dateKey()}`
-const selectedMood = ref(localStorage.getItem(moodStorageKey) || '')
-
+const selectedMood = ref('')
 const selectedMoodText = computed(() => {
   const mood = moods.find((item) => item.id === selectedMood.value)
   return mood ? mood.label : ''
 })
 
-function pickMood(mood) {
-  selectedMood.value = mood.id
-  localStorage.setItem(moodStorageKey, mood.id)
-  showToast(`已记录：今天心情${mood.label}`)
+// 保存心情到服务端（重复保存为更新，mood 与 note 互不覆盖）
+async function saveMood(payload, successText) {
+  try {
+    const record = await saveTodayMood(payload)
+    selectedMood.value = record.mood || ''
+    savedNote.value = record.note || ''
+    showToast(successText)
+  } catch (error) {
+    showToast(error.message || '保存失败，请稍后再试')
+  }
 }
 
-// 自定义心情：用自己的话记录，同样按日期保存在本地
-const noteStorageKey = `rehab-mood-note-${dateKey()}`
-const savedNote = ref(localStorage.getItem(noteStorageKey) || '')
-const moodNote = ref(savedNote.value)
+function pickMood(mood) {
+  if (mood.id === selectedMood.value) return
+  saveMood({ mood: mood.id }, `已记录：今天心情${mood.label}`)
+}
+
+// 自定义心情：用自己的话记录，同样保存到服务端
+const savedNote = ref('')
+const moodNote = ref('')
 
 function saveNote() {
   const text = moodNote.value.trim()
@@ -89,9 +91,21 @@ function saveNote() {
     showToast('请先写下现在的心情')
     return
   }
-  localStorage.setItem(noteStorageKey, text)
-  savedNote.value = text
-  showToast('心情已记下，愿你今天顺心。')
+  saveMood({ note: text }, '心情已记下，愿你今天顺心。')
+}
+
+// 进入页面时恢复今日已保存的心情
+async function loadTodayMood() {
+  try {
+    const record = await getTodayMood()
+    if (record) {
+      selectedMood.value = record.mood || ''
+      savedNote.value = record.note || ''
+      moodNote.value = record.note || ''
+    }
+  } catch {
+    // 加载失败不阻塞页面，保存时会再提示
+  }
 }
 
 // ===== 1 分钟放松呼吸：吸气 4 秒 → 屏住 2 秒 → 呼气 6 秒，共 5 轮 =====
@@ -146,7 +160,10 @@ const tips = [
   { icon: 'phone', title: '和家人聊聊天', text: '给家人打个电话，说说今天的小进步，被听见也是一种力量。' }
 ]
 
-onMounted(loadTodayQuote)
+onMounted(() => {
+  loadTodayQuote()
+  loadTodayMood()
+})
 onBeforeUnmount(stopBreathing)
 </script>
 
