@@ -8,12 +8,12 @@ const dayjs = require('dayjs')
 const MAX_NOTE_LENGTH = 50
 const RECENT_DAYS = 7
 
-function getTodayMood(userId) {
+async function getTodayMood(userId) {
   return moodRepository.findByUserAndDate(userId, today())
 }
 
 // 近 7 天心情记录：不足的日期用空记录补齐，按日期倒序（今天在最前）
-function getRecentMoods(userId) {
+async function getRecentMoods(userId) {
   const records = moodRepository.findByUserSince(
     userId,
     dayjs().subtract(RECENT_DAYS - 1, 'day').format('YYYY-MM-DD')
@@ -34,7 +34,7 @@ function getRecentMoods(userId) {
 }
 
 // 保存今日心情：一人一天一条，mood 与 note 可只传其一，未传字段保留原值
-function saveTodayMood(userId, input) {
+async function saveTodayMood(userId, input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) {
     throw new BusinessError(PARAM_ERROR, '心情参数格式不正确')
   }
