@@ -14,7 +14,7 @@
     "passwordHash": "$2a$10$nmugUf4Jw6/bmOpsooZrYuDgvSjxjHGCQ65CQ9JsgfIoSxaHu/p56",
     "name": "周叔叔",
     "age": 78,
-    "fontSize": "medium",
+    "fontSize": "large",
     "securityQuestion": "您出生的城市是？",
     "securityAnswerHash": "$2a$10$2GbitSBYKsdFhptEbSUS6.FbKvlGyCcLpWSMYoMDX/8CrHpSFTOwS",
     "createdAt": "2026-11-23T01:09:13.808Z"

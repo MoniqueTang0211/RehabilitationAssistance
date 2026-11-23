@@ -9,7 +9,8 @@ const authMiddleware = require('./middlewares/auth.middleware')
 const app = express()
 
 app.use(cors({ origin: config.corsOrigin }))
-app.use(express.json())
+// limit 调大：语音留言上传 60 秒 WAV(base64) 约 2.6MB
+app.use(express.json({ limit: '6mb' }))
 app.use(logMiddleware)
 
 // 健康检查（无需登录）
@@ -31,6 +32,7 @@ app.use('/api/plans', require('./routes/plan.route'))
 app.use('/api', require('./routes/message.route')) // /phrases 与 /messages
 app.use('/api/quotes', require('./routes/quote.route'))
 app.use('/api/moods', require('./routes/mood.route'))
+app.use('/api/speech', require('./routes/speech.route'))
 
 // 统一异常处理必须放在路由之后
 app.use(errorMiddleware)

@@ -1,6 +1,7 @@
 <script setup>
 import { onBeforeUnmount, ref } from 'vue'
 import AppIcon from './AppIcon.vue'
+import { transcribeSpeech } from '../api/speech'
 
 const props = defineProps({
   modelValue: {
@@ -15,12 +16,21 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'submit'])
 
-const isListening = ref(false)
-const voiceError = ref('')
-let recognition = null
+const MAX_RECORD_SECONDS = 60
+const TARGET_SAMPLE_RATE = 16000
 
-const speechRecognitionSupported = typeof window !== 'undefined'
-  && Boolean(window.SpeechRecognition || window.webkitSpeechRecognition)
+// idle | recording | transcribing
+const voiceState = ref('idle')
+const voiceError = ref('')
+let mediaStream = null
+let mediaRecorder = null
+let audioChunks = []
+let recordTimer = null
+
+const voiceInputSupported = typeof window !== 'undefined'
+  && Boolean(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)
+  && Boolean(window.MediaRecorder)
+  && Boolean(window.AudioContext || window.webkitAudioContext)
 
 function submit() {
   const content = props.modelValue.trim()
@@ -29,75 +39,236 @@ function submit() {
   }
 }
 
-function stopVoiceInput() {
-  if (recognition && isListening.value) {
-    try {
-      recognition.stop()
-    } catch {
-      isListening.value = false
-      voiceError.value = '暂时无法停止语音输入，请稍后重试。'
+function appendTranscript(transcript) {
+  if (!transcript) {
+    return
+  }
+
+  const currentText = props.modelValue
+  const separator = currentText.trim() && !/[，。！？；、]$/.test(currentText.trim())
+    ? '，'
+    : ''
+  emit('update:modelValue', `${currentText}${separator}${transcript}`.slice(0, 200))
+}
+
+function clearRecordTimer() {
+  if (recordTimer) {
+    clearTimeout(recordTimer)
+    recordTimer = null
+  }
+}
+
+function releaseStream() {
+  if (mediaStream) {
+    mediaStream.getTracks().forEach((track) => track.stop())
+    mediaStream = null
+  }
+}
+
+function downmixToMono(audioBuffer) {
+  const channelCount = audioBuffer.numberOfChannels
+  if (channelCount === 1) {
+    return audioBuffer.getChannelData(0)
+  }
+
+  const length = audioBuffer.length
+  const mixed = new Float32Array(length)
+  for (let channel = 0; channel < channelCount; channel += 1) {
+    const data = audioBuffer.getChannelData(channel)
+    for (let i = 0; i < length; i += 1) {
+      mixed[i] += data[i]
     }
+  }
+  for (let i = 0; i < length; i += 1) {
+    mixed[i] /= channelCount
+  }
+  return mixed
+}
+
+function resampleLinear(input, fromRate, toRate) {
+  if (fromRate === toRate) {
+    return input
+  }
+
+  const outLength = Math.max(1, Math.floor((input.length * toRate) / fromRate))
+  const output = new Float32Array(outLength)
+  const ratio = fromRate / toRate
+  for (let i = 0; i < outLength; i += 1) {
+    const position = i * ratio
+    const index = Math.floor(position)
+    const fraction = position - index
+    const a = input[index] || 0
+    const b = index + 1 < input.length ? input[index + 1] : a
+    output[i] = a + (b - a) * fraction
+  }
+  return output
+}
+
+function writeString(view, offset, text) {
+  for (let i = 0; i < text.length; i += 1) {
+    view.setUint8(offset + i, text.charCodeAt(i))
+  }
+}
+
+function bufferToBase64(buffer) {
+  const bytes = new Uint8Array(buffer)
+  const chunkSize = 0x8000
+  let binary = ''
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize))
+  }
+  return btoa(binary)
+}
+
+// 录音解码 -> 单声道 -> 重采样 16k -> PCM16 WAV -> base64（百度短语音识别要求）
+async function encodeWav16kMono(arrayBuffer) {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext
+  const audioContext = new AudioContextClass()
+  try {
+    const decoded = await audioContext.decodeAudioData(arrayBuffer)
+    const mono = downmixToMono(decoded)
+    const resampled = resampleLinear(mono, decoded.sampleRate, TARGET_SAMPLE_RATE)
+
+    const sampleCount = resampled.length
+    const buffer = new ArrayBuffer(44 + sampleCount * 2)
+    const view = new DataView(buffer)
+    writeString(view, 0, 'RIFF')
+    view.setUint32(4, 36 + sampleCount * 2, true)
+    writeString(view, 8, 'WAVE')
+    writeString(view, 12, 'fmt ')
+    view.setUint32(16, 16, true)
+    view.setUint16(20, 1, true) // PCM
+    view.setUint16(22, 1, true) // 单声道
+    view.setUint32(24, TARGET_SAMPLE_RATE, true)
+    view.setUint32(28, TARGET_SAMPLE_RATE * 2, true)
+    view.setUint16(32, 2, true)
+    view.setUint16(34, 16, true)
+    writeString(view, 36, 'data')
+    view.setUint32(40, sampleCount * 2, true)
+
+    let offset = 44
+    for (let i = 0; i < sampleCount; i += 1) {
+      const clamped = Math.max(-1, Math.min(1, resampled[i]))
+      view.setInt16(offset, clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff, true)
+      offset += 2
+    }
+    return bufferToBase64(buffer)
+  } finally {
+    audioContext.close()
+  }
+}
+
+async function handleRecordingStopped() {
+  releaseStream()
+  const recorder = mediaRecorder
+  mediaRecorder = null
+  const blob = new Blob(audioChunks, { type: (recorder && recorder.mimeType) || 'audio/webm' })
+  audioChunks = []
+
+  if (!blob.size) {
+    voiceState.value = 'idle'
+    voiceError.value = '没有录到声音，请重新录音。'
+    return
+  }
+
+  voiceState.value = 'transcribing'
+  try {
+    const wavBase64 = await encodeWav16kMono(await blob.arrayBuffer())
+    const data = await transcribeSpeech(wavBase64)
+    appendTranscript(data && typeof data.text === 'string' ? data.text.trim() : '')
+  } catch (error) {
+    voiceError.value = (error && error.message) || '语音识别失败，请改用文字输入。'
+  } finally {
+    voiceState.value = 'idle'
   }
 }
 
 function startVoiceInput() {
-  if (!speechRecognitionSupported || props.submitting) {
+  if (!voiceInputSupported || props.submitting || voiceState.value !== 'idle') {
     return
   }
 
   voiceError.value = ''
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-  try {
-    recognition = new SpeechRecognition()
-  } catch {
-    voiceError.value = '暂时无法启动语音输入，请稍后重试或改用文字输入。'
-    return
-  }
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then((stream) => {
+      mediaStream = stream
+      audioChunks = []
+      try {
+        mediaRecorder = new MediaRecorder(stream)
+      } catch {
+        releaseStream()
+        voiceError.value = '当前浏览器不支持录音，请改用文字输入。'
+        return
+      }
 
-  recognition.lang = 'zh-CN'
-  recognition.continuous = false
-  recognition.interimResults = false
-  recognition.onresult = (event) => {
-    const transcript = event.results[0][0].transcript.trim()
-    if (!transcript) {
-      return
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          audioChunks.push(event.data)
+        }
+      }
+      mediaRecorder.onerror = () => {
+        voiceError.value = '录音失败，请重试或改用文字输入。'
+        stopVoiceInput()
+      }
+      mediaRecorder.onstop = () => {
+        handleRecordingStopped()
+      }
+
+      try {
+        mediaRecorder.start()
+      } catch {
+        releaseStream()
+        mediaRecorder = null
+        voiceError.value = '暂时无法启动录音，请稍后重试或改用文字输入。'
+        return
+      }
+
+      voiceState.value = 'recording'
+      // 百度短语音识别限制单次 60 秒，超时自动停止
+      recordTimer = setTimeout(stopVoiceInput, MAX_RECORD_SECONDS * 1000)
+    })
+    .catch((error) => {
+      const name = error && error.name
+      if (name === 'NotAllowedError' || name === 'SecurityError') {
+        voiceError.value = '麦克风权限未开启，请在浏览器设置中允许使用麦克风。'
+      } else if (name === 'NotFoundError' || name === 'OverconstrainedError') {
+        voiceError.value = '未检测到麦克风，请检查设备后重试。'
+      } else {
+        voiceError.value = '无法打开麦克风，请检查权限后重试。'
+      }
+    })
+}
+
+function stopVoiceInput() {
+  clearRecordTimer()
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    try {
+      mediaRecorder.stop()
+    } catch {
+      releaseStream()
+      mediaRecorder = null
+      voiceState.value = 'idle'
     }
-
-    const currentText = props.modelValue
-    const separator = currentText.trim() && !/[，。！？；、]$/.test(currentText.trim())
-      ? '，'
-      : ''
-    const updatedText = `${currentText}${separator}${transcript}`.slice(0, 200)
-    emit('update:modelValue', updatedText)
-  }
-  recognition.onerror = (event) => {
-    if (event.error === 'aborted') {
-      return
+  } else {
+    releaseStream()
+    if (voiceState.value === 'recording') {
+      voiceState.value = 'idle'
     }
-
-    const messages = {
-      'not-allowed': '麦克风权限未开启，请在浏览器设置中允许使用麦克风。',
-      'service-not-allowed': '浏览器语音识别服务不可用，请改用文字输入。',
-      'audio-capture': '未检测到麦克风，请检查设备后重试。',
-      network: '语音识别网络连接失败，请改用文字输入或稍后重试。',
-      'no-speech': '没有听到语音，请靠近麦克风后重试。'
-    }
-    voiceError.value = messages[event.error] || '语音识别失败，请改用文字输入。'
-  }
-  recognition.onend = () => {
-    isListening.value = false
-  }
-
-  try {
-    isListening.value = true
-    recognition.start()
-  } catch {
-    isListening.value = false
-    voiceError.value = '暂时无法启动语音输入，请稍后重试或改用文字输入。'
   }
 }
 
-onBeforeUnmount(stopVoiceInput)
+onBeforeUnmount(() => {
+  clearRecordTimer()
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.onstop = null
+    try {
+      mediaRecorder.stop()
+    } catch {
+      // 忽略卸载时的停止异常
+    }
+  }
+  releaseStream()
+})
 </script>
 
 <template>
@@ -116,20 +287,23 @@ onBeforeUnmount(stopVoiceInput)
       <button
         class="voice-button"
         type="button"
-        :disabled="!speechRecognitionSupported || submitting"
-        :aria-pressed="isListening"
-        @click="isListening ? stopVoiceInput() : startVoiceInput()"
+        :disabled="!voiceInputSupported || submitting || voiceState === 'transcribing'"
+        :aria-pressed="voiceState === 'recording'"
+        @click="voiceState === 'recording' ? stopVoiceInput() : startVoiceInput()"
       >
-        {{ isListening ? '停止语音输入' : '开始语音输入' }}
+        {{ voiceState === 'recording' ? '停止语音输入' : (voiceState === 'transcribing' ? '正在识别…' : '开始语音输入') }}
       </button>
-      <p v-if="!speechRecognitionSupported" class="voice-hint" role="status">
+      <p v-if="!voiceInputSupported" class="voice-hint" role="status">
         当前浏览器不支持语音输入，请使用文字留言。
       </p>
       <p v-else class="voice-hint">
-        语音识别由浏览器提供，需要允许麦克风，并在安全网页（HTTPS 或 localhost）中使用；识别结果会填入上方留言框，请确认后再发送。
+        点击"开始语音输入"后说话，再次点击停止，单次录音不超过 60 秒；识别结果会填入上方留言框，请确认后再发送。
       </p>
-      <p v-if="isListening" class="voice-status" role="status">
-        正在听，请开始说话…
+      <p v-if="voiceState === 'recording'" class="voice-status" role="status">
+        正在录音，请开始说话…
+      </p>
+      <p v-else-if="voiceState === 'transcribing'" class="voice-status" role="status">
+        正在识别语音，请稍候…
       </p>
       <p v-if="voiceError" class="voice-error" role="alert">
         {{ voiceError }}

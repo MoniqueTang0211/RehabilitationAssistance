@@ -29,9 +29,7 @@ function toggleDetail() {
         <div class="task-title">{{ item.title }}</div>
         <div class="task-meta">
           <AppIcon name="clock" :size="18" />
-          <span class="task-meta-text">
-            建议 {{ item.duration }} 分钟 · 点击{{ expanded ? '收起' : '查看' }}图文指引
-          </span>
+          <span class="task-meta-text">建议 {{ item.duration }} 分钟</span>
         </div>
       </div>
       <span class="task-head-right">
@@ -39,7 +37,14 @@ function toggleDetail() {
           <AppIcon v-if="item.status === 'done'" name="check" :size="18" />
           {{ item.status === 'done' ? '已打卡' : '待打卡' }}
         </span>
-        <AppIcon class="task-chevron" :class="{ open: expanded }" name="chevron-down" :size="22" />
+        <span
+          class="detail-toggle"
+          role="button"
+          :aria-label="expanded ? '收起图文指引' : '查看图文指引'"
+          :aria-expanded="expanded"
+        >
+          <AppIcon class="task-chevron" :class="{ open: expanded }" name="chevron-down" :size="26" />
+        </span>
       </span>
     </div>
 
@@ -114,8 +119,20 @@ function toggleDetail() {
   flex-shrink: 0;
 }
 
+.detail-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: var(--color-primary);
+  background-color: var(--color-primary-light);
+  cursor: pointer;
+}
+
 .task-chevron {
-  color: var(--color-text-secondary);
+  color: var(--color-primary);
   transition: transform 0.2s ease;
 }
 
