@@ -14,5 +14,21 @@
     "date": "2026-11-17",
     "status": "done",
     "checkedAt": "2026-11-17T06:47:35.617Z"
+  },
+  {
+    "id": "ef318dc7-11fe-4e50-b846-12d6f8338746",
+    "userId": "user-001",
+    "taskId": "task-001",
+    "date": "2026-11-18",
+    "status": "pending",
+    "checkedAt": null
+  },
+  {
+    "id": "715eef76-271e-4dc0-9643-6d3cad908d77",
+    "userId": "user-001",
+    "taskId": "task-002",
+    "date": "2026-11-18",
+    "status": "pending",
+    "checkedAt": null
   }
 ]
