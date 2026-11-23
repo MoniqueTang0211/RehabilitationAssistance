@@ -4,13 +4,14 @@ import { ref, computed, onMounted } from 'vue'
 import TaskCard from '../components/TaskCard.vue'
 import ProgressBar from '../components/ProgressBar.vue'
 import AppIcon from '../components/AppIcon.vue'
-import { getTodayPlan, checkin, getRecords } from '../api/plan'
+import { getTodayPlan, checkin, cancelCheckin, getRecords } from '../api/plan'
 import { showToast } from '../utils/toast'
 
 const tasks = ref([]) // 今日任务
 const records = ref([]) // 历史打卡记录
 const loading = ref(true)
 const busyTaskId = ref('') // 正在提交打卡的任务，防止连点
+const cancelingTaskId = ref('') // 正在撤销打卡的任务，防止连点
 
 const doneCount = computed(() => tasks.value.filter((t) => t.status === 'done').length)
 const todayPercent = computed(() =>
@@ -53,6 +54,33 @@ async function onCheckin(item) {
     }
   } finally {
     busyTaskId.value = ''
+  }
+}
+
+// 撤销打卡：还原为未完成，同步今日任务与历史记录
+async function onCancelCheckin(item) {
+  if (item.status !== 'done' || cancelingTaskId.value || busyTaskId.value) return
+  cancelingTaskId.value = item.taskId
+  try {
+    const data = await cancelCheckin(item.taskId)
+    const target = tasks.value.find((t) => t.taskId === item.taskId)
+    if (target) {
+      target.status = data.record.status
+      target.checkedAt = data.record.checkedAt
+    }
+    const dateStr = new Date().toISOString().slice(0, 10)
+    const rec = records.value.find(
+      (r) => r.taskId === item.taskId && r.date === dateStr && r.status === 'done'
+    )
+    if (rec) {
+      rec.status = 'pending'
+      rec.checkedAt = null
+    }
+    showToast('已撤销打卡。')
+  } catch (e) {
+    showToast(e.message || '撤销失败，请稍后再试')
+  } finally {
+    cancelingTaskId.value = ''
   }
 }
 
@@ -100,8 +128,9 @@ onMounted(load)
         v-for="item in tasks"
         :key="item.taskId"
         :item="item"
-        :busy="busyTaskId === item.taskId"
+        :busy="busyTaskId === item.taskId || cancelingTaskId === item.taskId"
         @checkin="onCheckin"
+        @cancel="onCancelCheckin"
       />
     </template>
 

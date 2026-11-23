@@ -11,6 +11,11 @@ export function checkin(taskId) {
   return request.post('/plans/checkin', { taskId })
 }
 
+// 撤销打卡，返回 { record, progress }
+export function cancelCheckin(taskId) {
+  return request.post('/plans/checkin/cancel', { taskId })
+}
+
 // 历史打卡记录
 export function getRecords() {
   return request.get('/plans/records')

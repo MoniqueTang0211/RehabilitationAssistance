@@ -20,6 +20,15 @@ router.post('/checkin', (req, res, next) => {
   res.json(ok(planService.checkin(req.userId, taskId)))
 })
 
+// POST /api/plans/checkin/cancel 撤销打卡，返回最新进度
+router.post('/checkin/cancel', (req, res, next) => {
+  const { taskId } = req.body || {}
+  if (!taskId || typeof taskId !== 'string') {
+    return next(new BusinessError(PARAM_ERROR, '缺少 taskId 参数'))
+  }
+  res.json(ok(planService.cancelCheckin(req.userId, taskId)))
+})
+
 // GET /api/plans/records 历史打卡记录
 router.get('/records', (req, res) => {
   res.json(ok(planService.getRecords(req.userId)))

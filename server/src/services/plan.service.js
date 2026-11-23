@@ -3,7 +3,7 @@ const planRepository = require('../repositories/plan.repository')
 const progressRepository = require('../repositories/progress.repository')
 const taskService = require('./task.service')
 const { BusinessError } = require('../utils/response')
-const { NOT_FOUND, DUPLICATE } = require('../utils/errorCode')
+const { NOT_FOUND, DUPLICATE, PARAM_ERROR } = require('../utils/errorCode')
 const { genId, now, today } = require('../utils/helper')
 
 // 今日任务：当天无记录时按当前康复阶段自动生成
@@ -67,6 +67,27 @@ function checkin(userId, taskId) {
   }
 }
 
+// 撤销打卡：还原为未完成，并重算总进度
+function cancelCheckin(userId, taskId) {
+  taskService.getTaskDetail(taskId) // 任务不存在时抛 40401
+  const date = today()
+  const record = planRepository.findByUserTaskDate(userId, taskId, date)
+  if (!record) {
+    throw new BusinessError(NOT_FOUND, '今日任务中不存在该项目')
+  }
+  if (record.status !== 'done') {
+    throw new BusinessError(PARAM_ERROR, '该项目还未打卡，无需撤销')
+  }
+  record.status = 'pending'
+  record.checkedAt = null
+  planRepository.update(record)
+  const progress = recalcProgress(userId, date)
+  return {
+    record: { taskId: record.taskId, status: record.status, checkedAt: record.checkedAt },
+    progress
+  }
+}
+
 // 进度重算规则：当日已完成数 ÷ 当日任务总数 × 100，四舍五入
 function recalcProgress(userId, date) {
   const records = planRepository.findByUserAndDate(userId, date)
@@ -98,4 +119,4 @@ function getRecords(userId) {
   })
 }
 
-module.exports = { getTodayPlan, checkin, getRecords }
+module.exports = { getTodayPlan, checkin, cancelCheckin, getRecords }

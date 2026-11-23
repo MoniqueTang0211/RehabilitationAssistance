@@ -1,7 +1,7 @@
 const messageRepository = require('../repositories/message.repository')
 const { MESSAGE_TYPE } = require('../models/enums')
 const { BusinessError } = require('../utils/response')
-const { PARAM_ERROR, NOT_FOUND } = require('../utils/errorCode')
+const { PARAM_ERROR, NOT_FOUND, FORBIDDEN } = require('../utils/errorCode')
 const { genId, now } = require('../utils/helper')
 
 const MAX_CONTENT_LENGTH = 200
@@ -60,4 +60,33 @@ function createMessage(userId, input) {
   })
 }
 
-module.exports = { listPhrases, createMessage }
+// 我的待查看留言（可撤销），按发送时间倒序
+function listMyPendingMessages(userId) {
+  return messageRepository
+    .findMessagesByUser(userId)
+    .filter((message) => message.status === 'pending')
+    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
+}
+
+// 撤销误发的留言：仅本人、且尚未被查看时允许
+function revokeMessage(userId, messageId) {
+  if (typeof messageId !== 'string' || !messageId.trim()) {
+    throw new BusinessError(PARAM_ERROR, '留言编号不正确')
+  }
+
+  const message = messageRepository.findMessageById(messageId.trim())
+  if (!message) {
+    throw new BusinessError(NOT_FOUND, '留言不存在或已撤销')
+  }
+  if (message.userId !== userId) {
+    throw new BusinessError(FORBIDDEN, '无权撤销该留言')
+  }
+  if (message.status !== 'pending') {
+    throw new BusinessError(FORBIDDEN, '留言已被查看，无法撤销')
+  }
+
+  messageRepository.deleteMessageById(message.id)
+  return { id: message.id }
+}
+
+module.exports = { listPhrases, createMessage, listMyPendingMessages, revokeMessage }

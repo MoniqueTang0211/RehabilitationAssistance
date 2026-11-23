@@ -30,4 +30,26 @@ function insertMessage(message) {
   return message
 }
 
-module.exports = { findActivePhrases, findActivePhraseById, insertMessage }
+function findMessageById(id) {
+  return readArray(MESSAGE_FILE).find((message) => message && message.id === id) || null
+}
+
+function findMessagesByUser(userId) {
+  return readArray(MESSAGE_FILE).filter((message) => message && message.userId === userId)
+}
+
+function deleteMessageById(id) {
+  const messages = readArray(MESSAGE_FILE)
+  const rest = messages.filter((message) => !message || message.id !== id)
+  writeJson(MESSAGE_FILE, rest)
+  return rest.length !== messages.length
+}
+
+module.exports = {
+  findActivePhrases,
+  findActivePhraseById,
+  insertMessage,
+  findMessageById,
+  findMessagesByUser,
+  deleteMessageById
+}

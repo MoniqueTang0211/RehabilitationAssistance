@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import MessageForm from '../components/MessageForm.vue'
 import AppIcon from '../components/AppIcon.vue'
-import { getPhrases, sendMessage } from '../api/message'
+import { getMyMessages, getPhrases, revokeMessage, sendMessage } from '../api/message'
 import { showToast } from '../utils/toast'
 
 const phrases = ref([])
@@ -11,6 +11,8 @@ const phrasesError = ref('')
 const submitting = ref(false)
 const draft = ref('')
 const selectedPhraseId = ref(null)
+const sentMessages = ref([])
+const revokingId = ref(null)
 
 const selectedPhrase = computed(
   () => phrases.value.find((phrase) => phrase.id === selectedPhraseId.value) || null
@@ -33,22 +35,34 @@ async function loadPhrases() {
   }
 }
 
+async function loadSentMessages() {
+  try {
+    const result = await getMyMessages()
+    sentMessages.value = Array.isArray(result) ? result : []
+  } catch (error) {
+    sentMessages.value = []
+  }
+}
+
 async function submitMessage(payload) {
   if (submitting.value) {
-    return false
+    return null
   }
 
   submitting.value = true
   try {
-    await sendMessage(payload)
+    const message = await sendMessage(payload)
     if (payload.type === 'custom') {
       draft.value = ''
     }
+    if (message && message.id) {
+      sentMessages.value = [message, ...sentMessages.value.filter((item) => item.id !== message.id)]
+    }
     showToast('留言已发送，谢谢你告诉我们。')
-    return true
+    return message
   } catch (error) {
     showToast(error.message || '留言发送失败，请稍后重试')
-    return false
+    return null
   } finally {
     submitting.value = false
   }
@@ -65,27 +79,53 @@ function selectPhrase(phrase) {
   selectedPhraseId.value = selectedPhraseId.value === phrase.id ? null : phrase.id
 }
 
-function clearSelection() {
-  selectedPhraseId.value = null
-}
-
 async function sendSelectedPhrase() {
   const phrase = selectedPhrase.value
   if (!phrase) {
     return
   }
 
-  const success = await submitQuickPhrase(phrase)
-  if (success) {
+  const message = await submitQuickPhrase(phrase)
+  if (message) {
     selectedPhraseId.value = null
   }
+}
+
+// 撤销误触发送的留言（已被查看则无法撤销）
+async function revokeSent(message) {
+  if (revokingId.value) {
+    return
+  }
+
+  revokingId.value = message.id
+  try {
+    await revokeMessage(message.id)
+    sentMessages.value = sentMessages.value.filter((item) => item.id !== message.id)
+    showToast('已撤销发送的留言。')
+  } catch (error) {
+    showToast(error.message || '撤销失败，请稍后重试')
+  } finally {
+    revokingId.value = null
+  }
+}
+
+function formatSentTime(value) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return ''
+  }
+  const pad = (num) => String(num).padStart(2, '0')
+  return `${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
 function submitCustomMessage(content) {
   return submitMessage({ type: 'custom', content })
 }
 
-onMounted(loadPhrases)
+onMounted(() => {
+  loadPhrases()
+  loadSentMessages()
+})
 </script>
 
 <template>
@@ -105,10 +145,13 @@ onMounted(loadPhrases)
           重试
         </button>
       </div>
-      <p v-else-if="phrases.length === 0" class="section-message">
-        暂无快捷语句，你可以在下方写留言。
+      <p v-if="!phrasesLoading && !phrasesError && phrases.length > 0" class="phrase-hint">
+        点一下语句选中（会变绿并显示✓），再点下方「发送留言」
       </p>
-      <div v-else class="phrase-list">
+      <div v-if="!phrasesLoading && !phrasesError && phrases.length === 0" class="section-message">
+        暂无快捷语句，你可以在下方写留言。
+      </div>
+      <div v-if="!phrasesLoading && !phrasesError && phrases.length > 0" class="phrase-list">
         <button
           v-for="phrase in phrases"
           :key="phrase.id"
@@ -119,10 +162,11 @@ onMounted(loadPhrases)
           :aria-pressed="selectedPhraseId === phrase.id"
           @click="selectPhrase(phrase)"
         >
-          <span class="phrase-text">{{ phrase.content }}</span>
-          <span v-if="selectedPhraseId === phrase.id" class="phrase-badge">
-            <AppIcon name="check" :size="22" />已选
+          <span class="phrase-marker" aria-hidden="true">
+            <AppIcon v-if="selectedPhraseId === phrase.id" name="check" :size="18" />
           </span>
+          <span class="phrase-text">{{ phrase.content }}</span>
+          <span v-if="selectedPhraseId === phrase.id" class="phrase-badge">已选</span>
         </button>
       </div>
       <div v-if="selectedPhrase" class="phrase-actions">
@@ -134,14 +178,29 @@ onMounted(loadPhrases)
         >
           <AppIcon name="send" :size="24" />发送留言
         </button>
-        <button
-          class="phrase-undo"
-          type="button"
-          :disabled="submitting"
-          @click="clearSelection"
-        >
-          <AppIcon name="close" :size="24" />撤销
-        </button>
+      </div>
+    </section>
+
+    <section v-if="sentMessages.length" class="section" aria-labelledby="sent-title">
+      <h2 id="sent-title" class="section-title">
+        <AppIcon name="clock" :size="26" />已发送留言
+      </h2>
+      <p class="phrase-hint">误触发送的留言，可在被查看前逐条撤销</p>
+      <div class="sent-list">
+        <div v-for="item in sentMessages" :key="item.id" class="sent-card">
+          <div class="sent-text">
+            <p class="sent-content">{{ item.content }}</p>
+            <p class="sent-tip">{{ formatSentTime(item.createdAt) }} · 待查看</p>
+          </div>
+          <button
+            class="revoke-button"
+            type="button"
+            :disabled="revokingId === item.id"
+            @click="revokeSent(item)"
+          >
+            <AppIcon name="close" :size="22" />撤销
+          </button>
+        </div>
       </div>
     </section>
 
@@ -196,11 +255,16 @@ onMounted(loadPhrases)
   padding: 0 var(--gap);
 }
 
+.phrase-hint {
+  margin: 0 var(--gap) 10px;
+  font-size: var(--font-base);
+  color: var(--color-text-secondary);
+}
+
 .phrase-button {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
   min-height: var(--btn-height);
   padding: 12px 16px;
   border: 2px solid var(--color-primary);
@@ -212,6 +276,23 @@ onMounted(loadPhrases)
   text-align: left;
 }
 
+.phrase-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--color-primary);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--color-primary);
+}
+
+.phrase-text {
+  flex: 1;
+}
+
 .phrase-button.is-selected {
   border-color: var(--color-primary);
   background: var(--color-primary);
@@ -219,10 +300,12 @@ onMounted(loadPhrases)
   font-weight: 700;
 }
 
+.phrase-button.is-selected .phrase-marker {
+  border-color: #fff;
+  background: #fff;
+}
+
 .phrase-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
   flex-shrink: 0;
   padding: 4px 10px;
   border-radius: 999px;
@@ -238,39 +321,70 @@ onMounted(loadPhrases)
 
 .phrase-actions {
   display: flex;
-  gap: 12px;
   padding: 12px var(--gap) 0;
 }
 
 .phrase-send {
-  flex: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.phrase-undo {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  height: var(--btn-height);
-  border: 2px solid var(--color-text-secondary);
+}
+
+.sent-list {
+  display: grid;
+  gap: 12px;
+  padding: 0 var(--gap);
+}
+
+.sent-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 2px dashed var(--color-warning);
+  border-radius: var(--radius);
+  background: #fff8ef;
+}
+
+.sent-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.sent-content {
+  font-size: var(--font-base);
+  word-break: break-all;
+}
+
+.sent-tip {
+  margin-top: 4px;
+  font-size: var(--font-base);
+  color: var(--color-text-secondary);
+}
+
+.revoke-button {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 48px;
+  padding: 0 16px;
+  border: 2px solid var(--color-danger);
   border-radius: var(--radius);
   background: var(--color-card);
-  color: var(--color-text-secondary);
+  color: var(--color-danger);
   font: inherit;
-  font-size: var(--font-lg);
+  font-size: var(--font-base);
   font-weight: 600;
 }
 
-.phrase-undo:active {
+.revoke-button:active {
   opacity: 0.85;
 }
 
-.phrase-undo:disabled {
+.revoke-button:disabled {
   opacity: 0.5;
 }
 </style>

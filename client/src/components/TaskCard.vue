@@ -11,7 +11,7 @@ const props = defineProps({
   busy: { type: Boolean, default: false }
 })
 
-const emit = defineEmits(['checkin'])
+const emit = defineEmits(['checkin', 'cancel'])
 
 const detailEl = ref(null)
 const expanded = ref(false)
@@ -50,12 +50,21 @@ function toggleDetail() {
     </div>
 
     <button
+      v-if="item.status === 'done'"
+      class="task-cancel-btn"
+      :disabled="busy"
+      @click="emit('cancel', item)"
+    >
+      <AppIcon name="close" :size="22" />{{ busy ? '撤销中…' : '撤销打卡' }}
+    </button>
+    <button
+      v-else
       class="btn-primary task-checkin-btn"
-      :disabled="item.status === 'done' || busy"
+      :disabled="busy"
       @click="emit('checkin', item)"
     >
-      <AppIcon v-if="item.status === 'done'" name="check" :size="24" />
-      {{ item.status === 'done' ? '已完成打卡' : busy ? '提交中…' : '完成打卡' }}
+      <AppIcon v-if="busy" name="clock" :size="24" />
+      {{ busy ? '提交中…' : '完成打卡' }}
     </button>
   </div>
 </template>
@@ -155,5 +164,30 @@ button {
   align-items: center;
   justify-content: center;
   gap: 8px;
+}
+
+.task-cancel-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: var(--btn-height);
+  margin-top: 4px;
+  border: 2px solid var(--color-danger);
+  border-radius: var(--radius);
+  background: var(--color-card);
+  color: var(--color-danger);
+  font: inherit;
+  font-size: var(--font-lg);
+  font-weight: 600;
+}
+
+.task-cancel-btn:active {
+  opacity: 0.85;
+}
+
+.task-cancel-btn:disabled {
+  opacity: 0.5;
 }
 </style>
