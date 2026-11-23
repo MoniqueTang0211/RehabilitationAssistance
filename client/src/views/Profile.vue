@@ -308,6 +308,8 @@ onMounted(loadProfile)
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap; /* 大字模式下设置按钮换行而不是挤压标题 */
+  gap: 8px 12px;
   padding-right: var(--gap);
 }
 
@@ -322,6 +324,8 @@ onMounted(loadProfile)
   color: var(--color-primary);
   font-size: var(--font-base);
   font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .settings-mask {
@@ -424,6 +428,18 @@ onMounted(loadProfile)
   gap: 12px;
 }
 
+/* 窄屏：文字与按钮上下堆叠，避免大字换行错乱 */
+@media (max-width: 400px) {
+  .security-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .security-row .btn-outline {
+    width: 100%;
+  }
+}
+
 .security-text {
   flex: 1;
 }
@@ -523,10 +539,12 @@ onMounted(loadProfile)
 .profile-details div {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  flex-wrap: wrap; /* 大字模式下值可以换行显示 */
+  gap: 2px 12px;
 }
 
 .profile-details dt {
+  flex-shrink: 0;
   color: var(--color-text-secondary);
 }
 

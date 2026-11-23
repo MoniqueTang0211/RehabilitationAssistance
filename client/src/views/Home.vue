@@ -295,14 +295,26 @@ onMounted(() => {
 
 .mood-table {
   width: 100%;
+  table-layout: fixed; /* 固定列宽，防止长备注把表格撑出屏幕 */
   border-collapse: collapse;
   font-size: var(--font-base);
+}
+
+.mood-table th:nth-child(1),
+.mood-table td:nth-child(1) {
+  width: 72px;
+}
+
+.mood-table th:nth-child(2),
+.mood-table td:nth-child(2) {
+  width: 84px;
 }
 
 .mood-table th,
 .mood-table td {
   padding: 10px 6px;
   text-align: left;
+  word-break: break-word; /* 大字模式下长文字自动换行而不是溢出 */
   border-bottom: 1px solid #eee;
 }
 

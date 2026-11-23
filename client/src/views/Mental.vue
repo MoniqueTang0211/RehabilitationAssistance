@@ -312,16 +312,18 @@ onBeforeUnmount(stopBreathing)
 
 .mood-list {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
 .mood-button {
-  flex: 1;
+  flex: 1 1 60px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 12px 4px;
+  padding: 12px 2px;
   border: 2px solid #eee;
   border-radius: var(--radius);
   background-color: #fff;
@@ -343,6 +345,9 @@ onBeforeUnmount(stopBreathing)
 
 .mood-label {
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .mood-result {
