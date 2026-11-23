@@ -14,5 +14,53 @@
     "date": "2026-11-17",
     "status": "done",
     "checkedAt": "2026-11-17T06:47:35.617Z"
+  },
+  {
+    "id": "ef318dc7-11fe-4e50-b846-12d6f8338746",
+    "userId": "user-001",
+    "taskId": "task-001",
+    "date": "2026-11-18",
+    "status": "pending",
+    "checkedAt": null
+  },
+  {
+    "id": "715eef76-271e-4dc0-9643-6d3cad908d77",
+    "userId": "user-001",
+    "taskId": "task-002",
+    "date": "2026-11-18",
+    "status": "pending",
+    "checkedAt": null
+  },
+  {
+    "id": "b2940e04-c565-420f-adf1-df955426c2f1",
+    "userId": "user-001",
+    "taskId": "task-001",
+    "date": "2026-11-23",
+    "status": "pending",
+    "checkedAt": null
+  },
+  {
+    "id": "67c4d4aa-4eb5-4730-943a-ac35f461bf1a",
+    "userId": "user-001",
+    "taskId": "task-002",
+    "date": "2026-11-23",
+    "status": "pending",
+    "checkedAt": null
+  },
+  {
+    "id": "036db4e2-f0b0-4e24-b6ec-88297c8cab58",
+    "userId": "user-1795396153809",
+    "taskId": "task-001",
+    "date": "2026-11-23",
+    "status": "done",
+    "checkedAt": "2026-11-23T01:09:19.632Z"
+  },
+  {
+    "id": "2a9b95be-f232-49b2-8cac-f6c4d5f13503",
+    "userId": "user-1795396153809",
+    "taskId": "task-002",
+    "date": "2026-11-23",
+    "status": "pending",
+    "checkedAt": null
   }
 ]

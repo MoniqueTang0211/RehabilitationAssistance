@@ -43,5 +43,14 @@
     "content": "我想咨询康复训练",
     "status": "pending",
     "createdAt": "2026-11-17T11:50:46.394Z"
+  },
+  {
+    "id": "7e0f74ed-3de8-4305-ab0b-7d02b92514b4",
+    "userId": "user-001",
+    "type": "quick",
+    "quickPhraseId": "phrase-005",
+    "content": "请帮我联系家人",
+    "status": "pending",
+    "createdAt": "2026-11-23T01:08:10.814Z"
   }
 ]

@@ -30,6 +30,7 @@ app.use('/api/tasks', require('./routes/task.route'))
 app.use('/api/plans', require('./routes/plan.route'))
 app.use('/api', require('./routes/message.route')) // /phrases 与 /messages
 app.use('/api/quotes', require('./routes/quote.route'))
+app.use('/api/moods', require('./routes/mood.route'))
 
 // 统一异常处理必须放在路由之后
 app.use(errorMiddleware)

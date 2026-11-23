@@ -5,6 +5,7 @@ import ProgressBar from '../components/ProgressBar.vue'
 import AppIcon from '../components/AppIcon.vue'
 import { getProgress } from '../api/progress'
 import { getTodayPlan } from '../api/plan'
+import { getRecentMoods } from '../api/mood'
 import { settings } from '../store'
 import { showToast } from '../utils/toast'
 
@@ -24,26 +25,29 @@ const loading = ref(true)
 const tasks = ref([])
 const tasksLoading = ref(true)
 
-// 近 7 天心情记录，数据来自心理关怀页按日期保存的本地记录
+// 近 7 天心情记录，来自服务端账号下的保存记录
 const moodRecords = ref([])
 
-function buildMoodRecords() {
-  const list = []
+function buildMoodRecords(list) {
   const now = new Date()
-  for (let i = 0; i < 7; i += 1) {
+  return (Array.isArray(list) ? list : []).map((item, i) => {
     const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i)
-    const month = String(d.getMonth() + 1).padStart(2, '0')
-    const day = String(d.getDate()).padStart(2, '0')
-    const key = `${d.getFullYear()}-${month}-${day}`
-    const moodId = localStorage.getItem(`rehab-mood-${key}`) || ''
-    list.push({
+    const key = item.date || `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    return {
       key,
       dateText: i === 0 ? '今天' : `${d.getMonth() + 1}月${d.getDate()}日`,
-      moodText: MOOD_LABELS[moodId] || '',
-      note: localStorage.getItem(`rehab-mood-note-${key}`) || ''
-    })
+      moodText: MOOD_LABELS[item.mood] || '',
+      note: item.note || ''
+    }
+  })
+}
+
+async function loadMoodRecords() {
+  try {
+    moodRecords.value = buildMoodRecords(await getRecentMoods())
+  } catch {
+    // 加载失败不阻塞首页，保持空列表
   }
-  return list
 }
 
 const doneCount = computed(() => tasks.value.filter((t) => t.status === 'done').length)
@@ -85,7 +89,7 @@ async function loadTodayPlan() {
 onMounted(() => {
   loadProgress()
   loadTodayPlan()
-  moodRecords.value = buildMoodRecords()
+  loadMoodRecords()
 })
 </script>
 
